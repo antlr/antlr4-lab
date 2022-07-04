@@ -1,0 +1,25 @@
+<html>
+<body>
+
+<FORM action="http://localhost:8080/hello" method="get">
+    <P>
+<TEXTAREA name="grammar" rows="10" cols="40">
+grammar T;
+start : ID EOF;
+ID : [a-z]+ ;
+WS : [ \t\n]+ -> skip ;
+</TEXTAREA>
+    </P>
+<p>
+<TEXTAREA name="input" rows="3" cols="40">
+abc
+</TEXTAREA>
+</p>
+    <INPUT type="text" name="start" value="start">
+<br>
+    <INPUT type="submit" value="Send">
+</FORM>
+
+</body>
+</html>
+

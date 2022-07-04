@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href="prism.css" rel="stylesheet" />
+	<script src="prism.js"></script>
+</head>
+<body>
+
+<script type="module">
+  import {CodeJar} from 'https://medv.io/codejar/codejar.js'
+
+const node = document.querySelector('.editor');
+
+const my = editor => {
+  let code = editor.textContent;
+  code = code.replace(
+    /\((\w+?)(\b)/g,
+    '(<font color="#8a2be2">$1</font>$2'
+  );
+  editor.innerHTML = code;
+};
+
+const jar = CodeJar(node, my);
+</script>
+
+<div class="editor">
+(defun fibonacci (n)
+	(loop repeat n
+		for a = 0 then b
+		and b = 1 then (+ a b)
+		finally (return b)))
+(defun -reverse (list)
+	(let ((value '()))
+		(dolist (e list) (push e value))
+		value))
+</div>
+
+</body>
+</html>
+

@@ -11,6 +11,7 @@ import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.DecisionInfo;
 import org.antlr.v4.runtime.atn.ParseInfo;
+import org.antlr.v4.runtime.tree.JsonSerializer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
 import org.eclipse.jetty.http.HttpParser;
@@ -69,13 +70,16 @@ public class ANTLRHttpServer {
 //			JsonObject jobj = jsonReader.readObject();
 //			System.out.println(jobj);
 
-			interp(grammar, input, startRule);
+			String json = interp(grammar, input, startRule);
 
 			response.setStatus(HttpServletResponse.SC_OK);
+			PrintWriter w = response.getWriter();
+			w.write(json);
+			w.flush();
 		}
 	}
 
-	public static ParseInfo interp(String grammar, String input, String startRule) {
+	public static String interp(String grammar, String input, String startRule) {
 		grammar = grammar.replace("\r", "");
 		input = input.replace("\r", "");
 		startRule = startRule.strip();
@@ -109,7 +113,10 @@ public class ANTLRHttpServer {
 		ParseTree t = parser.parse(r.index);
 		ParseInfo parseInfo = parser.getParseInfo();
 
-		return parseInfo;
+		String json = JsonSerializer.toJSON(t, parser);
+//		System.out.println(json);
+
+		return json;
 	}
 
 	public static void main(String[] args) throws Exception {

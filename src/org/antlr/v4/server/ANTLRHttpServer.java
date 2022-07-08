@@ -130,9 +130,11 @@ public class ANTLRHttpServer {
 			System.err.println("grammar warns" + listener.warnings);
 			System.err.println("grammar errors" + listener.errors);
 
-			return String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}}",
-					String.join(",", listener.warnings),
-					String.join(",", listener.errors));
+			if ( listener.errors.size()>0 ) {
+				return String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}}",
+						String.join(",", listener.warnings),
+						String.join(",", listener.errors));
+			}
 		}
 		catch (RecognitionException re) {
 			// shouldn't get here.
@@ -182,6 +184,11 @@ public class ANTLRHttpServer {
 				lexListener.msgs,
 				parseListener.msgs);
 //		System.out.println(json);
+
+		json = String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}, \"result\":%s}",
+				String.join(",", listener.warnings),
+				String.join(",", listener.errors),
+				json);
 
 		return json;
 	}

@@ -7,7 +7,6 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ParseInfo;
 import org.antlr.v4.runtime.misc.Utils;
-import org.antlr.v4.runtime.tree.JsonSerializer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
 import org.eclipse.jetty.server.*;
@@ -16,20 +15,38 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ANTLRHttpServer {
 	static class GrammarErrorListener implements ANTLRToolListener {
-		List<ANTLRMessage> msgs = new ArrayList<>();
+		List<String> errors = new ArrayList<>();
+		List<String> warnings = new ArrayList<>();
+
 		@Override
 		public void info(String msg) { }
+
 		@Override
 		public void error(ANTLRMessage msg) {
-			msgs.add(msg);
+			String errText = (String)msg.getArgs()[0];
+			errText = Utils.escapeJSONString(errText);
+			String s = String.format("{\"type\":\"%s\",\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
+					msg.getErrorType().toString(),
+					msg.line,
+					msg.charPosition,
+					errText);
+			errors.add(s);
 		}
 		@Override
 		public void warning(ANTLRMessage msg) {
-			msgs.add(msg);
+			String errText = (String)msg.getArgs()[0];
+			errText = Utils.escapeJSONString(errText);
+			String s = String.format("{\"type\":\"%s\",\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
+					msg.getErrorType().toString(),
+					msg.line,
+					msg.charPosition,
+					errText);
+			warnings.add(s);
 		}
 	}
 
@@ -110,9 +127,15 @@ public class ANTLRHttpServer {
 		GrammarErrorListener listener = new GrammarErrorListener();
 		try {
 			g = new IgnoreTokenVocabGrammar(null, grammar, null, listener);
-			System.out.println("grammar errors" + listener.msgs);
+			System.err.println("grammar warns" + listener.warnings);
+			System.err.println("grammar errors" + listener.errors);
+
+			return String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}}",
+					String.join(",", listener.warnings),
+					String.join(",", listener.errors));
 		}
 		catch (RecognitionException re) {
+			// shouldn't get here.
 			System.err.println("Can't parse grammar");
 		}
 
@@ -149,13 +172,18 @@ public class ANTLRHttpServer {
 
 		System.out.println(t.toStringTree(parser));
 
-		String json = JsonSerializer.toJSON(t, parser);
+		TokenStream tokenStream = parser.getInputStream();
+		CharStream inputStream = tokenStream.getTokenSource().getInputStream();
+		String json = JsonSerializer.toJSON(
+				t,
+				Arrays.asList(parser.getRuleNames()),
+				tokenStream,
+				inputStream,
+				lexListener.msgs,
+				parseListener.msgs);
 //		System.out.println(json);
 
-		return String.format("{\"lerrors\":[%s],\"perrors\":[%s],\"result\":%s}",
-				String.join(",", lexListener.msgs),
-				String.join(",", parseListener.msgs),
-				json);
+		return json;
 	}
 
 	public static void main(String[] args) throws Exception {

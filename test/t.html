@@ -1,9 +1,29 @@
 <html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        run_antlr = async function() {
+            var g = $('#grammar').val();
+            var I = $('#input').val();
+            var s = $('#start').val();
+            // console.log(I)
+            // console.log(s)
+
+            const res = await axios.get("http://localhost:8080/antlr/",
+                { params: { grammar: g, input: I, start:s } })
+                .then(function (response) {
+                    // handle success
+                    console.log(response.data.result);
+                })
+        }
+    </script>
+</head>
 <body>
 
-<FORM action="http://localhost:8080/hello" method="get">
+    <button type="button" onclick="run_antlr()">RUN</button>
     <P>
-<TEXTAREA name="grammar" rows="10" cols="40">
+<TEXTAREA name="grammar" id="grammar" rows="10" cols="40">
 grammar Expr;
 
 program
@@ -33,14 +53,12 @@ WS: [ \t\n\r\f]+ -> skip ;
 </TEXTAREA>
     </P>
 <p>
-<TEXTAREA name="input" rows="3" cols="40">
+<TEXTAREA name="input" id="input" rows="3" cols="40">
 f(x, y, z) { x = x and y or z; g(30); }
 </TEXTAREA>
 </p>
-    <INPUT type="text" name="start" value="start">
+    <INPUT type="text" id="start" name="start" value="program">
 <br>
-    <INPUT type="submit" value="Send">
-</FORM>
 
 </body>
 </html>

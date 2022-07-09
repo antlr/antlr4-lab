@@ -1,5 +1,6 @@
 package org.antlr.v4.server;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,12 +11,15 @@ import org.antlr.v4.runtime.misc.Utils;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 public class ANTLRHttpServer {
@@ -87,12 +91,13 @@ public class ANTLRHttpServer {
 		}
 	}
 
-	public static class HelloWorldServlet extends HttpServlet {
+	public static class HelloWorldServlet extends DefaultServlet {
 		@Override
 		public void doGet(HttpServletRequest request, HttpServletResponse response)
 				throws IOException {
 			response.setContentType("text/plain;charset=utf-8");
 			response.setContentType("text/html;");
+			response.addHeader("Access-Control-Allow-Origin", "*");
 
 //			response.getWriter().println("<h1>Hello world!</h1>");
 
@@ -201,8 +206,25 @@ public class ANTLRHttpServer {
 		Server server = new Server(8080);
 
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath("/hello");
-		context.addServlet(new ServletHolder(new HelloWorldServlet()), "/*");
+		context.setContextPath("/");
+		context.addServlet(new ServletHolder(new HelloWorldServlet()), "/antlr/*");
+
+		ServletHolder holderHome = new ServletHolder("static-home", DefaultServlet.class);
+		holderHome.setInitParameter("resourceBase", "static");
+		holderHome.setInitParameter("dirAllowed","true");
+		holderHome.setInitParameter("pathInfoOnly","true");
+		context.addServlet(holderHome,"/static/*");
+
+		ServletHolder testHome = new ServletHolder("static-test", DefaultServlet.class);
+		testHome.setInitParameter("resourceBase", "test");
+		testHome.setInitParameter("dirAllowed","true");
+		testHome.setInitParameter("pathInfoOnly","true");
+		context.addServlet(testHome,"/test/*");
+
+//		ServletHolder holderPwd = new ServletHolder("default", DefaultServlet.class);
+//		holderPwd.setInitParameter("dirAllowed","true");
+//		context.addServlet(holderPwd,"/");
+
 		server.setHandler(context);
 
 		server.start();

@@ -1,47 +1,84 @@
 package org.antlr.v4.server;
 
 import org.antlr.runtime.RecognitionException;
-import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ParseInfo;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class GrammarProcessor {
     /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
      *  with errors, tokens, rule names, and the parse tree.
      */
     public static String interp(String grammar, String lexGrammar, String input, String startRule) {
-//        grammar = grammar.replace("\r", "");
-//        input = input.replace("\r", "");
         startRule = startRule.strip();
         Grammar g = null;
         LexerGrammar lg = null;
-        CollectGrammarErrorsAndWarnings listener = new CollectGrammarErrorsAndWarnings();
+        CollectGrammarErrorsAndWarnings lexlistener = new CollectGrammarErrorsAndWarnings();
+        CollectGrammarErrorsAndWarnings parselistener = new CollectGrammarErrorsAndWarnings();
+        List<String> warnings = new ArrayList<>();
         try {
             if ( lexGrammar!=null ) {
-                lg = new LexerGrammar(lexGrammar, listener);
-                g = new IgnoreTokenVocabGrammar(null, grammar, lg, listener);
+                lg = new LexerGrammar(lexGrammar, lexlistener);
+                g = new IgnoreTokenVocabGrammar(null, grammar, lg, parselistener);
             }
             else {
-                g = new IgnoreTokenVocabGrammar(null, grammar, null, listener);
+                g = new IgnoreTokenVocabGrammar(null, grammar, null, parselistener);
             }
 
-            if ( listener.errors.size()>0 ) {
-                return String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}}",
-                        String.join(",", listener.warnings),
-                        String.join(",", listener.errors));
-            }
+            warnings.addAll(lexlistener.warnings);
+            warnings.addAll(parselistener.warnings);
+
+//            if ( lexlistener.errors.size()>0 || parselistener.errors.size()>0 ) {
+//                return String.format("{\"tool_warnings\":[%s],\"tool_parser_grammar_errors\":[%s],"+
+//                                "\"tool_lexer_grammar_errors\":[%s],"+
+//                                "\"result\":{}, \"result\":{}}",
+//                        String.join(",", warnings),
+//                        String.join(",", parselistener.errors),
+//                        String.join(",", lexlistener.errors));
+//            }
         }
         catch (RecognitionException re) {
             // shouldn't get here.
             System.err.println("Can't parse grammar");
         }
 
+        String result = "{}";
+        if ( lexlistener.errors.size()==0 && parselistener.errors.size()==0 ) {
+            result = getParseResultJSON(g, lg, startRule, input);
+//		System.out.println(result);
+        }
+
+        result = String.format("{\"warnings\":[%s],"+
+                        "\"parser_grammar_errors\":[%s]," +
+                        "\"lexer_grammar_errors\":[%s]," +
+                        "\"result\":%s}",
+                String.join(",", warnings),
+                String.join(",", parselistener.errors),
+                String.join(",", lexlistener.errors),
+                result);
+//        if ( lexlistener.errors.size()>0 ) {
+//            json = String.format("{\"tool_warnings\":[%s],\"tool_parser_grammar_errors\":[%s],\"tool_lexer_grammar_errors\":[%s],\"result\":{}, \"result\":%s}",
+//                    String.join(",", warnings),
+//                    String.join(",", parselistener.errors),
+//                    String.join(",", lexlistener.errors),
+//                    json);
+//        }
+//        else {
+//            json = String.format("{\"tool_warnings\":[%s],\"tool_parser_grammar_errors\":[%s],\"result\":{}, \"result\":%s}",
+//                    String.join(",", warnings),
+//                    String.join(",", parselistener.errors),
+//                    json);
+//        }
+
+        return result;
+    }
+
+    private static String getParseResultJSON(Grammar g, LexerGrammar lg, String startRule, String input) {
         CharStream charStream = CharStreams.fromString(input);
 
         LexerInterpreter lexEngine = (lg != null) ?
@@ -84,13 +121,6 @@ public class GrammarProcessor {
                 inputStream,
                 lexListener.msgs,
                 parseListener.msgs);
-//		System.out.println(json);
-
-        json = String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}, \"result\":%s}",
-                String.join(",", listener.warnings),
-                String.join(",", listener.errors),
-                json);
-
         return json;
     }
 }

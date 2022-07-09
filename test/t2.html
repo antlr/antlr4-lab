@@ -6,7 +6,7 @@
         run_antlr = async function() {
             var g = $('#grammar').val();
             var lg = $('#lexgrammar').val();
-            var I = $('#input').val();
+            var I = $('#input').text();
             var s = $('#start').val();
             // console.log(I)
             // console.log(s)
@@ -18,12 +18,17 @@
                     // handle success
                     console.log(response.data.result);
 
-                    if ( response.data.tool_errors.length>0 ||
-                        response.data.tool_warnings.length>0 ) {
+                    if ( response.data.parser_grammar_errors.length>0 ||
+                        response.data.lexer_grammar_errors.length>0 ||
+                        response.data.warnings.length>0 ) {
                         $("#console").text(
-                            JSON.stringify(response.data.tool_errors) + "\n" +
-                            JSON.stringify(response.data.tool_warnings)
+                            JSON.stringify(response.data.parser_grammar_errors) + "\n" +
+                            JSON.stringify(response.data.lexer_grammar_errors) + "\n" +
+                            JSON.stringify(response.data.warnings)
                         );
+                    }
+                    else {
+                        $("#console").text("");
                     }
                 })
         }
@@ -78,9 +83,9 @@ WS: [ \t\n\r\f]+ -> skip ;
 </TEXTAREA>
             </P>
 <p>
-<TEXTAREA name="input" id="input" rows="3" cols="40">
-f(x, y, z) { x = x and y or z; g(30); }
-</TEXTAREA>
+    <div id="input" contenteditable="true" style="border:1px solid darkgray">
+        <span title="oooooo">f(x, y, z)</span> { x = x and y or z; g(30); }
+    </div>
 </p>
     <INPUT type="text" id="start" name="start" value="program">
     <br>

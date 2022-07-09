@@ -1,11 +1,14 @@
 package org.antlr.v4.server;
 
 import org.antlr.runtime.RecognitionException;
+import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ParseInfo;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class GrammarProcessor {
@@ -13,16 +16,20 @@ public class GrammarProcessor {
      *  with errors, tokens, rule names, and the parse tree.
      */
     public static String interp(String grammar, String lexGrammar, String input, String startRule) {
-        grammar = grammar.replace("\r", "");
-        input = input.replace("\r", "");
+//        grammar = grammar.replace("\r", "");
+//        input = input.replace("\r", "");
         startRule = startRule.strip();
         Grammar g = null;
         LexerGrammar lg = null;
         CollectGrammarErrorsAndWarnings listener = new CollectGrammarErrorsAndWarnings();
         try {
-            g = new IgnoreTokenVocabGrammar(null, grammar, null, listener);
-            System.err.println("grammar warns" + listener.warnings);
-            System.err.println("grammar errors" + listener.errors);
+            if ( lexGrammar!=null ) {
+                lg = new LexerGrammar(lexGrammar, listener);
+                g = new IgnoreTokenVocabGrammar(null, grammar, lg, listener);
+            }
+            else {
+                g = new IgnoreTokenVocabGrammar(null, grammar, null, listener);
+            }
 
             if ( listener.errors.size()>0 ) {
                 return String.format("{\"tool_warnings\":[%s],\"tool_errors\":[%s],\"result\":{}}",

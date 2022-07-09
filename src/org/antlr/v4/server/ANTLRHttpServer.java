@@ -15,17 +15,18 @@ import static org.antlr.v4.server.GrammarProcessor.interp;
 public class ANTLRHttpServer {
 	public static class HelloWorldServlet extends DefaultServlet {
 		@Override
-		public void doGet(HttpServletRequest request, HttpServletResponse response)
+		public void doPost(HttpServletRequest request, HttpServletResponse response)
 				throws IOException {
 			response.setContentType("text/plain;charset=utf-8");
 			response.setContentType("text/html;");
 			response.addHeader("Access-Control-Allow-Origin", "*");
 
 			String grammar = request.getParameter("grammar");
+			String lexGrammar = request.getParameter("lexgrammar"); // can be null
 			String input = request.getParameter("input");
 			String startRule = request.getParameter("start");
 
-			String json = interp(grammar, input, startRule);
+			String json = interp(grammar, lexGrammar, input, startRule);
 
 			response.setStatus(HttpServletResponse.SC_OK);
 			PrintWriter w = response.getWriter();

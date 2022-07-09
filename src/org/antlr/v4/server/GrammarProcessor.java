@@ -9,7 +9,10 @@ import org.antlr.v4.tool.*;
 import java.util.Arrays;
 
 public class GrammarProcessor {
-    public static String interp(String grammar, String input, String startRule) {
+    /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
+     *  with errors, tokens, rule names, and the parse tree.
+     */
+    public static String interp(String grammar, String lexGrammar, String input, String startRule) {
         grammar = grammar.replace("\r", "");
         input = input.replace("\r", "");
         startRule = startRule.strip();

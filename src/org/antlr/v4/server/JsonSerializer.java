@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+// TODO: Ultimately this will go into the ANTLR core and then we can remove this class
+
 /** This "class" wraps support functions that generate JSON for parse trees.
  *  The JSON includes everything needed to reconstruct a parse tree:
  *

@@ -2,6 +2,18 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <script>
+        $( function() {
+            $( document ).tooltip();
+        } );
+    </script>
+    <script>
+        String.prototype.sliceReplace = function(start, end, repl) {
+            return this.substring(0, start) + repl + this.substring(end);
+        };
+    </script>
     <script>
         run_antlr = async function() {
             var g = $('#grammar').val();
@@ -18,6 +30,8 @@
                     // handle success
                     console.log(response.data.result);
 
+                    // $("#t1").tooltip( "option", "content", "Awesome title!" );
+
                     if ( response.data.parser_grammar_errors.length>0 ||
                         response.data.lexer_grammar_errors.length>0 ||
                         response.data.warnings.length>0 ) {
@@ -30,6 +44,41 @@
                     else {
                         $("#console").text("");
                     }
+                    let tokens = response.data.result.tokens;
+                    let symbols = response.data.result.symbols;
+                    let last = -1;
+                    let newInput = "";
+                    for (ti in tokens) {
+                        let t = tokens[ti];
+                        let toktext = I.slice(t.start,t.stop+1);
+                        console.log(t);
+                        console.log(toktext);
+                        if ( t.start != last+1 ) {
+                            let skippedText = I.slice(last+1,t.start);
+                            console.log("missing token '"+ skippedText+"'");
+                            newInput += skippedText;
+                        }
+                        newInput += "<span title='"+symbols[t.type]+"'>"+toktext+"</span>"
+                        last = t.stop;
+                        // newInput = newInput.sliceReplace(t.start,t.stop+1, "<span title='foo'>"+toktext+"</span>");
+                        // newInput += "<span title='foo'>"+toktext+"</span>";
+                    }
+                    console.log(newInput);
+                    // $("#input").text(newInput);
+                    $("#input").html(newInput);
+
+                    $(function () {
+                            $('div span').hover(
+                                function () {
+                                    $(this)
+                                        .css('text-decoration', 'underline')
+                                        .css('text-decoration-color', 'darkgray').text();
+                                },
+                                function() { $(this).css('text-decoration',''); }
+                            );
+                        }
+                    );
+
                 })
         }
     </script>
@@ -83,9 +132,8 @@ WS: [ \t\n\r\f]+ -> skip ;
 </TEXTAREA>
             </P>
 <p>
-    <div id="input" contenteditable="true" style="border:1px solid darkgray">
-        <span title="oooooo">f(x, y, z)</span> { x = x and y or z; g(30); }
-    </div>
+<!--    <div id="input" contenteditable="true" style="border:1px solid darkgray"><span id="t1" title="oooooo">foo(able, y, z)</span> { x = x and y or z; g(30); }</div>-->
+    <div id="input" contenteditable="true" style="border:1px solid darkgray">foo(able, y, z) { x = x and y or z; g(30); }</div>
 </p>
     <INPUT type="text" id="start" name="start" value="program">
     <br>

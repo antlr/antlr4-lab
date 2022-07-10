@@ -102,7 +102,7 @@ public class JsonSerializer {
         }
         TokenStream tokenStream = recog.getInputStream();
         CharStream inputStream = tokenStream.getTokenSource().getInputStream();
-        return toJSON(t, Arrays.asList(ruleNames), tokenStream, inputStream, null, null);
+        return toJSON(t, Arrays.asList(ruleNames), recog.getVocabulary(), tokenStream, inputStream, null, null);
     }
 
     /** Create a JSON representation of a parse tree and include all other information necessary to reconstruct
@@ -111,6 +111,7 @@ public class JsonSerializer {
      */
     public static String toJSON(Tree t,
                                 final List<String> ruleNames,
+                                final Vocabulary vocabulary,
                                 final TokenStream tokenStream,
                                 final CharStream inputStream,
                                 List<String> lexMsgs,
@@ -133,6 +134,16 @@ public class JsonSerializer {
             buf.append("\"input\":\"");
             buf.append(input);
             buf.append("\",");
+        }
+
+        if ( vocabulary!=null ) {
+            List<String> syms = new ArrayList<>();
+            buf.append("\"symbols\":[");
+            for (int i = 0; i < vocabulary.getMaxTokenType(); i++) {
+                syms.add('"'+vocabulary.getSymbolicName(i)+'"');
+            }
+            buf.append(String.join(",", syms));
+            buf.append("],");
         }
 
         if ( tokenStream!=null ) {

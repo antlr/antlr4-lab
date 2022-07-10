@@ -117,6 +117,7 @@ public class GrammarProcessor {
         String json = JsonSerializer.toJSON(
                 t,
                 Arrays.asList(parser.getRuleNames()),
+                parser.getVocabulary(),
                 tokenStream,
                 inputStream,
                 lexListener.msgs,

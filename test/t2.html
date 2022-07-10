@@ -4,6 +4,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <style>
+        .mytooltip {
+            font-size:14px;
+            /*height:8px;*/
+            padding: 2px;
+            padding-left: 4px;
+            padding-right: 4px;
+            /*width:80px;*/
+        }
+        .inputbox {
+            border:1px solid darkgray;
+            font-size:14px;
+            font-family: monospace;
+        }
+    </style>
+    <style>
+    </style>
     <script>
         $( function() {
             $( document ).tooltip();
@@ -58,7 +75,8 @@
                             console.log("missing token '"+ skippedText+"'");
                             newInput += skippedText;
                         }
-                        newInput += "<span title='"+symbols[t.type]+"'>"+toktext+"</span>"
+                        let tooltipText = '#'+ti+' Type '+symbols[t.type]+' Line '+t.line+':'+t.pos;
+                        newInput += "<span class='tooltip' title='"+tooltipText+"'>"+toktext+"</span>"
                         last = t.stop;
                         // newInput = newInput.sliceReplace(t.start,t.stop+1, "<span title='foo'>"+toktext+"</span>");
                         // newInput += "<span title='foo'>"+toktext+"</span>";
@@ -68,17 +86,26 @@
                     $("#input").html(newInput);
 
                     $(function () {
-                            $('div span').hover(
-                                function () {
-                                    $(this)
-                                        .css('text-decoration', 'underline')
-                                        .css('text-decoration-color', 'darkgray').text();
-                                },
-                                function() { $(this).css('text-decoration',''); }
-                            );
+                        $('div span').hover(
+                            function () {
+                                $(this)
+                                    .css('text-decoration', 'underline')
+                                    .css('font-weight', 'bold')
+                                    .css('text-decoration-color', 'darkgray').text();
+                            },
+                            function () {
+                                $(this)
+                                    .css('text-decoration', '')
+                                    .css('font-weight', 'normal')
+                            }
+                        );
                         }
                     );
-
+                    $('div span').tooltip({
+                        show: { duration: 0 },
+                        hide: { duration: 0 },
+                        tooltipClass: "mytooltip"
+                    });
                 })
         }
     </script>
@@ -132,8 +159,7 @@ WS: [ \t\n\r\f]+ -> skip ;
 </TEXTAREA>
             </P>
 <p>
-<!--    <div id="input" contenteditable="true" style="border:1px solid darkgray"><span id="t1" title="oooooo">foo(able, y, z)</span> { x = x and y or z; g(30); }</div>-->
-    <div id="input" contenteditable="true" style="border:1px solid darkgray">foo(able, y, z) { x = x and y or z; g(30); }</div>
+    <div class='inputbox' id="input" contenteditable="true">foo(able, y, z) { x = x and y or z; g(30); }</div>
 </p>
     <INPUT type="text" id="start" name="start" value="program">
     <br>

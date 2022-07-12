@@ -1,8 +1,6 @@
 package org.antlr.v4.server;
 
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.Utils;
 
 import java.util.ArrayList;
@@ -18,12 +16,30 @@ class CollectLexOrParseSyntaxErrors extends BaseErrorListener {
                             org.antlr.v4.runtime.RecognitionException e) {
         msg = Utils.escapeJSONString(msg);
         String err;
-        if (offendingSymbol != null) {
-            err = String.format("{\"token\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                    ((Token) (offendingSymbol)).getTokenIndex(), line, charPositionInLine, msg);
-        } else {
-            err = String.format("{\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                    line, charPositionInLine, msg);
+        if ( recognizer instanceof Lexer ) {
+            int erridx = ((Lexer) recognizer)._input.index(); // where we detected error
+            int startidx = erridx;
+            if ( e instanceof LexerNoViableAltException ) {
+                startidx = ((LexerNoViableAltException)e).getStartIndex();
+            }
+            err = String.format("{\"startidx\":%d,\"erridx\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
+                    startidx, erridx, line, charPositionInLine, msg);
+        }
+        else {
+            Token startToken;
+            Token stopToken;
+            if ( e instanceof NoViableAltException ) {
+                startToken = ((NoViableAltException) e).getStartToken();
+                stopToken = e.getOffendingToken();
+            }
+            else if ( e==null ) {
+                startToken = stopToken = (Token)offendingSymbol;
+            }
+            else {
+                startToken = stopToken = e.getOffendingToken();
+            }
+            err = String.format("{\"startidx\":%d,\"stopidx\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
+                    startToken.getTokenIndex(), stopToken.getTokenIndex(), line, charPositionInLine, msg);
         }
         msgs.add(err);
     }

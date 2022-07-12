@@ -6,6 +6,9 @@ import org.antlr.v4.runtime.atn.ParseInfo;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
 
+import java.io.IOException;
+import java.io.StringBufferInputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -79,7 +82,14 @@ public class GrammarProcessor {
     }
 
     private static String getParseResultJSON(Grammar g, LexerGrammar lg, String startRule, String input) {
-        CharStream charStream = CharStreams.fromString(input);
+//        CharStream charStream = CharStreams.fromString(input);
+        CharStream charStream = null;
+        try {
+            charStream = CharStreams.fromStream(new StringBufferInputStream(input));
+        }
+        catch (IOException ioe) {
+            System.err.println(ioe.getMessage());
+        }
 
         LexerInterpreter lexEngine = (lg != null) ?
                 lg.createLexerInterpreter(charStream) :

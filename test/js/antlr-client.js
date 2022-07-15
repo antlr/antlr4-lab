@@ -1,3 +1,49 @@
+function showToolErrors(response) {
+    if (response.data.parser_grammar_errors.length > 0 ||
+        response.data.lexer_grammar_errors.length > 0 ||
+        response.data.warnings.length > 0)
+    {
+        let errors = "<ul>\n";
+        response.data.parser_grammar_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        response.data.lexer_grammar_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        response.data.warnings.forEach( function(w) {
+            errors += `<li>${w.line}:${w.pos} ${w.msg}</li>`;
+        });
+        errors += "</ul>\n";
+        $("#console").html(errors);
+    }
+    else {
+        $("#console").text("");
+    }
+}
+
+function showParseErrors(response) {
+
+    console.log(response.data.result.lex_errors)
+    console.log(response.data.result.parse_errors)
+
+    if (response.data.result.lex_errors.length > 0 ||
+        response.data.result.parse_errors.length > 0 )
+    {
+        let errors = "<ul>\n";
+        response.data.result.lex_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        response.data.result.parse_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        errors += "</ul>\n";
+        $("#parse_errors").html(errors);
+    }
+    else {
+        $("#parse_errors").text("");
+    }
+}
+
 function processANTLRResults(response) {
     var g = $('#grammar').val();
     var lg = $('#lexgrammar').val();
@@ -6,12 +52,9 @@ function processANTLRResults(response) {
     console.log(response.data.result);
 
     // $("#t1").tooltip( "option", "content", "Awesome title!" );
+    showToolErrors(response);
+    showParseErrors(response);
 
-    if (response.data.parser_grammar_errors.length > 0 || response.data.lexer_grammar_errors.length > 0 || response.data.warnings.length > 0) {
-        $("#console").text(JSON.stringify(response.data.parser_grammar_errors) + "\n" + JSON.stringify(response.data.lexer_grammar_errors) + "\n" + JSON.stringify(response.data.warnings));
-    } else {
-        $("#console").text("");
-    }
     let tokens = response.data.result.tokens;
     let symbols = response.data.result.symbols;
     let last = -1;
@@ -33,8 +76,6 @@ function processANTLRResults(response) {
         // newInput += "<span title='foo'>"+toktext+"</span>";
     }
     console.log(newInput);
-    console.log(response.data.result.lex_errors)
-    console.log(response.data.result.parse_errors)
     $("#input").html(newInput);
 
     $(function () {

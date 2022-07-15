@@ -1,0 +1,13 @@
+.mytooltip {
+    font-size:14px;
+    /*height:8px;*/
+    padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    /*width:80px;*/
+}
+.inputbox {
+    border:1px solid darkgray;
+    font-size:14px;
+    font-family: monospace;
+}

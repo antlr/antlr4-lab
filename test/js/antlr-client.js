@@ -22,10 +22,6 @@ function showToolErrors(response) {
 }
 
 function showParseErrors(response) {
-
-    console.log(response.data.result.lex_errors)
-    console.log(response.data.result.parse_errors)
-
     if (response.data.result.lex_errors.length > 0 ||
         response.data.result.parse_errors.length > 0 )
     {
@@ -62,8 +58,7 @@ function processANTLRResults(response) {
     for (ti in tokens) {
         let t = tokens[ti];
         let toktext = I.slice(t.start, t.stop + 1);
-        console.log(t);
-        console.log(toktext);
+        // console.log(t+' '+console.log(toktext);
         if (t.start != last + 1) {
             let skippedText = I.slice(last + 1, t.start);
             console.log("missing token '" + skippedText + "'");
@@ -72,10 +67,8 @@ function processANTLRResults(response) {
         let tooltipText = '#' + ti + ' Type ' + symbols[t.type] + ' Line ' + t.line + ':' + t.pos;
         newInput += "<span class='tooltip' title='" + tooltipText + "'>" + toktext + "</span>"
         last = t.stop;
-        // newInput = newInput.sliceReplace(t.start,t.stop+1, "<span title='foo'>"+toktext+"</span>");
-        // newInput += "<span title='foo'>"+toktext+"</span>";
     }
-    console.log(newInput);
+    // console.log(newInput);
     $("#input").html(newInput);
 
     $(function () {
@@ -93,6 +86,33 @@ function processANTLRResults(response) {
     $('div span').tooltip({
         show: {duration: 0}, hide: {duration: 0}, tooltipClass: "mytooltip"
     });
+
+    console.log(JSON.stringify(response.data.result.tree));
+
+    tree = response.data.result.tree;
+    walk(tree, response.data.result, I);
+}
+
+function walk(t, result, input) {
+    if (t == null) return;
+
+    let symbols = result.symbols;
+    let rulenames = result.rules;
+    let tokens = result.tokens;
+    let ruleidx = t.ruleidx;
+    let alt = t.alt;
+    console.log(rulenames[ruleidx]);
+    for (let i = 0; i < t.kids.length; i++) {
+        kid = t.kids[i];
+        if (typeof(kid) == 'number') {
+            let a = tokens[kid].start;
+            let b = tokens[kid].stop;
+            console.log(`${symbols[tokens[kid].type]}:${input.slice(a,b+1)}`);
+        }
+        else {
+            walk(kid, result, input);
+        }
+    }
 }
 
 run_antlr = async function () {
@@ -100,11 +120,11 @@ run_antlr = async function () {
     var lg = $('#lexgrammar').val();
     var I = $('#input').text();
     var s = $('#start').val();
-    // console.log(I)
-    // console.log(s)
 
-    const res = await axios.post("http://localhost:8080/antlr/", null, // null data
-        {params: {grammar: g, lexgrammar: lg, input: I, start: s}})
+    await axios.post("http://localhost:8080/antlr/",
+        null, // null data
+        {params: {grammar: g, lexgrammar: lg, input: I, start: s}}
+    )
         .then(processANTLRResults)
 }
 

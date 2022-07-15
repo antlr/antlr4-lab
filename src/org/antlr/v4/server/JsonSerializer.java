@@ -185,7 +185,7 @@ public class JsonSerializer {
         }
         buf.append("{");
         buf.append(getJSONNodeText(t));
-        buf.append(":[");
+        buf.append(",\"kids\":[");
         for (int i = 0; i<t.getChildCount(); i++) {
             if ( i>0 ) buf.append(',');
             buf.append(toJSONTree(t.getChild(i)));
@@ -201,9 +201,9 @@ public class JsonSerializer {
             int ruleIndex = ((RuleContext)t).getRuleContext().getRuleIndex();
             int altNumber = ((RuleContext) t).getAltNumber();
             if ( altNumber!= ATN.INVALID_ALT_NUMBER ) {
-                return String.format("\"%d:%d\"",ruleIndex,altNumber);
+                return String.format("\"ruleidx\":%d,\"alt\":%d",ruleIndex,altNumber);
             }
-            return String.format("\"%d\"",ruleIndex);
+            return String.format("\"ruleidx\":%d",ruleIndex,altNumber);
         }
         else if ( t instanceof ErrorNode) {
             Token symbol = ((TerminalNode)t).getSymbol();

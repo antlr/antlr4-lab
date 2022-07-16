@@ -108,7 +108,7 @@ function walk(t, result, input, buf) {
     let ruleidx = t.ruleidx;
     let alt = t.alt;
     // console.log(rulenames[ruleidx]);
-    buf.push('<li><span class="box">'+rulenames[ruleidx]+'</span>')
+    buf.push('<li><span class="tree-root">'+rulenames[ruleidx]+'</span>')
     if (t.kids.length > 0) {
         buf.push('<ul class="nested">');
         for (let i = 0; i < t.kids.length; i++) {
@@ -117,7 +117,7 @@ function walk(t, result, input, buf) {
                 let a = tokens[kid].start;
                 let b = tokens[kid].stop;
                 // buf.push(`<li>${symbols[tokens[kid].type]}:${input.slice(a, b + 1)}</li>`);
-                buf.push(`<li>${input.slice(a, b + 1)}</li>`);
+                buf.push(`<li class="tree-token">${input.slice(a, b + 1)}</li>`);
                 // console.log(`${symbols[tokens[kid].type]}:${input.slice(a, b + 1)}`);
             }
             else {
@@ -142,7 +142,7 @@ async function run_antlr() {
 }
 
 function initParseTreeView() {
-    let toggler = document.getElementsByClassName("box");
+    let toggler = document.getElementsByClassName("tree-root");
     for (let i = 0; i < toggler.length; i++) {
         toggler[i].addEventListener("click", function () {
             this.parentElement.querySelector(".nested").classList.toggle("active");

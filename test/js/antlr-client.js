@@ -1,45 +1,3 @@
-function showToolErrors(response) {
-    if (response.data.parser_grammar_errors.length > 0 ||
-        response.data.lexer_grammar_errors.length > 0 ||
-        response.data.warnings.length > 0)
-    {
-        let errors = "<ul>\n";
-        response.data.parser_grammar_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
-        });
-        response.data.lexer_grammar_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
-        });
-        response.data.warnings.forEach( function(w) {
-            errors += `<li>${w.line}:${w.pos} ${w.msg}</li>`;
-        });
-        errors += "</ul>\n";
-        $("#console").html(errors);
-    }
-    else {
-        $("#console").text("");
-    }
-}
-
-function showParseErrors(response) {
-    if (response.data.result.lex_errors.length > 0 ||
-        response.data.result.parse_errors.length > 0 )
-    {
-        let errors = "<ul>\n";
-        response.data.result.lex_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
-        });
-        response.data.result.parse_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
-        });
-        errors += "</ul>\n";
-        $("#parse_errors").html(errors);
-    }
-    else {
-        $("#parse_errors").text("");
-    }
-}
-
 function processANTLRResults(response) {
     var g = $('#grammar').val();
     var lg = $('#lexgrammar').val();
@@ -95,7 +53,7 @@ function walk(t, result, input, buf) {
     let alt = t.alt;
     // console.log(rulenames[ruleidx]);
     buf.push('<li><span class="tree-root">'+rulenames[ruleidx]+'</span>')
-    if (t.kids.length > 0) {
+    if ( 'kids' in t && t.kids.length > 0) {
         buf.push('<ul class="nested">');
         for (let i = 0; i < t.kids.length; i++) {
             kid = t.kids[i];
@@ -153,6 +111,48 @@ function tokenizeInput(input, tokens, symbols) {
         last = t.stop;
     }
     return newInput;
+}
+
+function showToolErrors(response) {
+    if (response.data.parser_grammar_errors.length > 0 ||
+        response.data.lexer_grammar_errors.length > 0 ||
+        response.data.warnings.length > 0)
+    {
+        let errors = "<ul>\n";
+        response.data.parser_grammar_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        response.data.lexer_grammar_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        response.data.warnings.forEach( function(w) {
+            errors += `<li>${w.line}:${w.pos} ${w.msg}</li>`;
+        });
+        errors += "</ul>\n";
+        $("#console").html(errors);
+    }
+    else {
+        $("#console").text("");
+    }
+}
+
+function showParseErrors(response) {
+    if (response.data.result.lex_errors.length > 0 ||
+        response.data.result.parse_errors.length > 0 )
+    {
+        let errors = "<ul>\n";
+        response.data.result.lex_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        response.data.result.parse_errors.forEach( function(e) {
+            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+        });
+        errors += "</ul>\n";
+        $("#parse_errors").html(errors);
+    }
+    else {
+        $("#parse_errors").text("");
+    }
 }
 
 // MAIN

@@ -6,6 +6,11 @@
     padding-right: 4px;
     /*width:80px;*/
 }
+
+.ui-tooltip {
+    white-space: pre-line;
+}
+
 .inputbox {
     border:1px solid darkgray;
     font-size:14px;

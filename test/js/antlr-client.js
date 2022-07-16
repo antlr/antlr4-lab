@@ -53,21 +53,7 @@ function processANTLRResults(response) {
 
     let tokens = response.data.result.tokens;
     let symbols = response.data.result.symbols;
-    let last = -1;
-    let newInput = "";
-    for (ti in tokens) {
-        let t = tokens[ti];
-        let toktext = I.slice(t.start, t.stop + 1);
-        // console.log(t+' '+console.log(toktext);
-        if (t.start != last + 1) {
-            let skippedText = I.slice(last + 1, t.start);
-            console.log("missing token '" + skippedText + "'");
-            newInput += skippedText;
-        }
-        let tooltipText = `#${ti} Type ${symbols[t.type]} Line ${t.line}:${t.pos}`;
-        newInput += `<span id='t${ti}' class='tooltip' title='${tooltipText}'>${toktext}</span>`
-        last = t.stop;
-    }
+    let newInput = tokenizeInput(I, tokens, symbols);
     // console.log(newInput);
     $("#input").html(newInput);
 
@@ -148,6 +134,25 @@ function initParseTreeView() {
             this.classList.toggle("check-box");
         });
     }
+}
+
+function tokenizeInput(input, tokens, symbols) {
+    let last = -1;
+    let newInput = "";
+    for (ti in tokens) {
+        let t = tokens[ti];
+        let toktext = input.slice(t.start, t.stop + 1);
+        // console.log(t+' '+console.log(toktext);
+        if (t.start != last + 1) {
+            let skippedText = input.slice(last + 1, t.start);
+            console.log("missing token '" + skippedText + "'");
+            newInput += `<span id='skipped' class='tooltip' title='Skipped'>${skippedText}</span>`
+        }
+        let tooltipText = `#${ti} Type ${symbols[t.type]} Line ${t.line}:${t.pos}`;
+        newInput += `<span id='t${ti}' class='tooltip' title='${tooltipText}'>${toktext}</span>`
+        last = t.stop;
+    }
+    return newInput;
 }
 
 // MAIN

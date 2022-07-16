@@ -7,8 +7,13 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
@@ -21,10 +26,14 @@ public class ANTLRHttpServer {
 			response.setContentType("text/html;");
 			response.addHeader("Access-Control-Allow-Origin", "*");
 
-			String grammar = request.getParameter("grammar");
-			String lexGrammar = request.getParameter("lexgrammar"); // can be null
-			String input = request.getParameter("input");
-			String startRule = request.getParameter("start");
+			JsonReader jsonReader = Json.createReader(request.getReader());
+			JsonObject jsonObj = jsonReader.readObject();
+			System.out.println(jsonObj);
+
+			String grammar = jsonObj.getString("grammar");
+			String lexGrammar = jsonObj.getString("lexgrammar"); // can be null
+			String input = jsonObj.getString("input");
+			String startRule = jsonObj.getString("start");
 
 			String json = interp(grammar, lexGrammar, input, startRule);
 

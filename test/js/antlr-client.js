@@ -135,8 +135,7 @@ async function run_antlr() {
     var s = $('#start').val();
 
     await axios.post("http://localhost:8080/antlr/",
-        null, // null data
-        {params: {grammar: g, lexgrammar: lg, input: I, start: s}}
+        {grammar: g, lexgrammar: lg, input: I, start: s}
     )
         .then(processANTLRResults)
 }

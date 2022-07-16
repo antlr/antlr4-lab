@@ -60,7 +60,7 @@ WS: [ \t\n\r\f]+ -> skip ;
 <p>
     <div class='inputbox' id="input" contenteditable="true">foo(able, y, z) { x = x and y or z; g(30); }</div>
 </p>
-    <INPUT type="text" id="start" name="start" value="program">
+    <INPUT type="text" id="start" name="start" value="program"><div id="tree"></div>
     <br>
     <br>
     <button type="button" onclick="run_antlr()">RUN</button>
@@ -69,6 +69,21 @@ WS: [ \t\n\r\f]+ -> skip ;
 <br>
     <div id="console"></div> <!-- tool errors -->
     <div id="parse_errors"></div>
+
+
+    <script>
+            var toggler = document.getElementsByClassName("box");
+            var i;
+
+            for (i = 0; i < toggler.length; i++) {
+                console.log("box");
+                toggler[i].addEventListener("click", function() {
+                    this.parentElement.querySelector(".nested").classList.toggle("active");
+                    this.classList.toggle("check-box");
+                });
+            }
+    </script>
+
 </body>
 </html>
 

@@ -64,15 +64,15 @@ function processANTLRResults(response) {
             console.log("missing token '" + skippedText + "'");
             newInput += skippedText;
         }
-        let tooltipText = '#' + ti + ' Type ' + symbols[t.type] + ' Line ' + t.line + ':' + t.pos;
-        newInput += "<span class='tooltip' title='" + tooltipText + "'>" + toktext + "</span>"
+        let tooltipText = `#${ti} Type ${symbols[t.type]} Line ${t.line}:${t.pos}`;
+        newInput += `<span id='t${ti}' class='tooltip' title='${tooltipText}'>${toktext}</span>`
         last = t.stop;
     }
     // console.log(newInput);
     $("#input").html(newInput);
 
     $(function () {
-        $('div span').hover(function () {
+        $('#input span').hover(function () {
             $(this)
                 .css('text-decoration', 'underline')
                 .css('font-weight', 'bold')
@@ -90,10 +90,16 @@ function processANTLRResults(response) {
     console.log(JSON.stringify(response.data.result.tree));
 
     tree = response.data.result.tree;
-    walk(tree, response.data.result, I);
+    buf = ['<ul id="treeUL">'];
+    walk(tree, response.data.result, I, buf);
+    buf.push('</ul>');
+    console.log(buf.join('\n'));
+    $("#tree").html(buf.join('\n'))
+
+    initParseTreeView();
 }
 
-function walk(t, result, input) {
+function walk(t, result, input, buf) {
     if (t == null) return;
 
     let symbols = result.symbols;
@@ -101,21 +107,28 @@ function walk(t, result, input) {
     let tokens = result.tokens;
     let ruleidx = t.ruleidx;
     let alt = t.alt;
-    console.log(rulenames[ruleidx]);
-    for (let i = 0; i < t.kids.length; i++) {
-        kid = t.kids[i];
-        if (typeof(kid) == 'number') {
-            let a = tokens[kid].start;
-            let b = tokens[kid].stop;
-            console.log(`${symbols[tokens[kid].type]}:${input.slice(a,b+1)}`);
+    // console.log(rulenames[ruleidx]);
+    buf.push('<li><span class="box">'+rulenames[ruleidx]+'</span>')
+    if (t.kids.length > 0) {
+        buf.push('<ul class="nested">');
+        for (let i = 0; i < t.kids.length; i++) {
+            kid = t.kids[i];
+            if (typeof (kid) == 'number') {
+                let a = tokens[kid].start;
+                let b = tokens[kid].stop;
+                // buf.push(`<li>${symbols[tokens[kid].type]}:${input.slice(a, b + 1)}</li>`);
+                buf.push(`<li>${input.slice(a, b + 1)}</li>`);
+                // console.log(`${symbols[tokens[kid].type]}:${input.slice(a, b + 1)}`);
+            }
+            else {
+                walk(kid, result, input, buf);
+            }
         }
-        else {
-            walk(kid, result, input);
-        }
+        buf.push('</ul>');
     }
 }
 
-run_antlr = async function () {
+async function run_antlr() {
     var g = $('#grammar').val();
     var lg = $('#lexgrammar').val();
     var I = $('#input').text();
@@ -128,8 +141,21 @@ run_antlr = async function () {
         .then(processANTLRResults)
 }
 
-String.prototype.sliceReplace = function (start, end, repl) {
-    return this.substring(0, start) + repl + this.substring(end);
-};
+function initParseTreeView() {
+    let toggler = document.getElementsByClassName("box");
+    for (let i = 0; i < toggler.length; i++) {
+        toggler[i].addEventListener("click", function () {
+            this.parentElement.querySelector(".nested").classList.toggle("active");
+            this.classList.toggle("check-box");
+        });
+    }
+}
 
-$( function() { $( document ).tooltip(); } );
+// MAIN
+$(document).ready(function() {
+    String.prototype.sliceReplace = function (start, end, repl) {
+        return this.substring(0, start) + repl + this.substring(end);
+    };
+
+    $(document).tooltip();
+});

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<style>
+ul, #treeUL {
+  list-style-type: none;
+}
+
+#treeUL {
+  /*margin: 0;*/
+  padding: 0;
+}
+
+.box {
+  cursor: pointer;
+  -webkit-user-select: none; /* Safari 3.1+ */
+  -moz-user-select: none; /* Firefox 2+ */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
+}
+
+.box::before {
+  content: "\232A";
+  font-size: 12px;
+  color: darkgray;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.check-box::before {
+  content: "\FE40";
+  position: relative;
+  top: 5px;
+  font-size: 12px;
+  color: darkgray;
+  margin-right: 2px;
+}
+
+.tree-token {
+}
+
+.nested {
+  display: none;
+}
+
+.active {
+  display: block;
+}
+</style>
+<script>
+$(document).ready(function() {
+var toggler = document.getElementsByClassName("box");
+var i;
+
+for (i = 0; i < toggler.length; i++) {
+  console.log("box");
+  toggler[i].addEventListener("click", function() {
+    this.parentElement.querySelector(".nested").classList.toggle("active");
+    this.classList.toggle("check-box");
+  });
+}
+});
+</script>
+
+</head>
+<body>
+
+<h2>Tree View</h2>
+<p>A tree view represents a hierarchical view of information, where each item can have a number of subitems.</p>
+<p>Click on the box(es) to open or close the tree branches.</p>
+
+<ul id="treeUL">
+<li><span class="box">program</span>
+<ul class="nested">
+<li><span class="box">stat</span>
+<ul class="nested">
+<li class="tree-token">ID:a</li>
+<li class="tree-token">EQ:=</li>
+<li><span class="box">expr</span>
+<ul class="nested">
+<li class="tree-token">INT:3</li>
+</ul>
+<li class="tree-token">SEMI:;</li>
+</ul>
+<li class="tree-token">EOF</li>
+</ul>
+</ul>
+
+
+</body>
+</html>
+

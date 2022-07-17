@@ -48,11 +48,10 @@ function processANTLRResults(response) {
     });
 
     // $(document).tooltip("disable").tooltip("hide");
-    $("#input").keydown(
-        e => e.ctrlKey ? $(document).tooltip("enable")
-            : null
+    $(document).keydown(
+        e => e.ctrlKey ? $(document).tooltip("enable") : null
     );
-    $("#input").keyup(
+    $(document).keyup(
         e => $(document).tooltip("disable")
     );
     $(document).tooltip("disable");

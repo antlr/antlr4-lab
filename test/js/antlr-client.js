@@ -22,26 +22,40 @@ function processANTLRResults(response) {
 
     $("#input").html(newInput);
 
-    $(function () {
-        $('#input span').hover(function (event) {
-            let oldStyle = $(this).css('text-decoration');
-            $(this).data( "text-decoration", oldStyle ); // save
-            $(this)
-                .css('text-decoration', 'underline')
-                .css('font-weight', 'bold')
-                .css('text-decoration-color', 'darkgray').text();
-        }, function () {
-            let oldStyle = $(this).data( "text-decoration");
-            $(this)
-                .css('text-decoration', oldStyle)
-                .css('font-weight', 'normal')
-        });
+    $('#input span').hover(function (event) {
+        if ( !event.ctrlKey ) return;
+        let oldStyle = $(this).css('text-decoration');
+        if ( $(this).css("cursor")!=="pointer" ) {
+            $(this).css('cursor','pointer');
+        }
+        $(this).data( "text-decoration", oldStyle ); // save
+        $(this)
+            .css('text-decoration', 'underline')
+            .css('font-weight', 'bold')
+            .css('text-decoration-color', 'darkgray').text();
+    }, function () {
+        let oldStyle = $(this).data( "text-decoration");
+        if ( $(this).css("cursor")==="pointer" ) {
+            $(this).css('cursor','auto');
+        }
+        $(this)
+            .css('text-decoration', oldStyle)
+            .css('font-weight', 'normal')
     });
+
     $('div span').tooltip({
         show: {duration: 0}, hide: {duration: 0}, tooltipClass: "mytooltip"
     });
 
-    console.log(JSON.stringify(response.data.result.tree));
+    // $(document).tooltip("disable").tooltip("hide");
+    $("#input").keydown(
+        e => e.ctrlKey ? $(document).tooltip("enable")
+            : null
+    );
+    $("#input").keyup(
+        e => $(document).tooltip("disable")
+    );
+    $(document).tooltip("disable");
 
     tree = response.data.result.tree;
     buf = ['<ul id="treeUL">'];

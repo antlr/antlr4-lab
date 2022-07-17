@@ -15,9 +15,9 @@ function processANTLRResults(response) {
     let parse_errors = response.data.result.parse_errors
 
     let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
-    chunks = chunks.map(function (c) {
-        return `<span class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
-    });
+    chunks = chunks.map(c =>
+         `<span ${'error' in c ? 'style="color:red;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
+    );
     let newInput = chunks.join('');
 
     $("#input").html(newInput);
@@ -116,7 +116,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
         let e = lex_errors[ei];
         let errtext = input.slice(e.startidx, e.erridx + 1);
         let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
-        let chunk = {tooltip:tooltipText, chunktext:errtext};
+        let chunk = {tooltip:tooltipText, chunktext:errtext, error:true};
         for (let i = e.startidx; i <= e.erridx; i++) {
             charToChunk[i] = chunk;
         }
@@ -127,6 +127,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
         let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
         for (let i = tokens[e.startidx].start; i <= tokens[e.stopidx].stop; i++) {
             charToChunk[i].tooltip += '\n'+tooltipText;
+            charToChunk[i].error = true;
         }
     }
 

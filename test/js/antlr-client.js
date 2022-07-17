@@ -11,8 +11,15 @@ function processANTLRResults(response) {
 
     let tokens = response.data.result.tokens;
     let symbols = response.data.result.symbols;
-    let newInput = tokenizeInput(I, tokens, symbols);
-    // console.log(newInput);
+    let lex_errors = response.data.result.lex_errors;
+    let parse_errors = response.data.result.parse_errors
+
+    let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
+    chunks = chunks.map(function (c) {
+        return `<span class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
+    });
+    let newInput = chunks.join('');
+
     $("#input").html(newInput);
 
     $(function () {
@@ -94,23 +101,69 @@ function initParseTreeView() {
     }
 }
 
-function tokenizeInput(input, tokens, symbols) {
-    let last = -1;
-    let newInput = "";
+function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
+    let charToChunk = new Array(input.length);
     for (ti in tokens) {
         let t = tokens[ti];
         let toktext = input.slice(t.start, t.stop + 1);
-        // console.log(t+' '+console.log(toktext);
-        if (t.start != last + 1) {
-            let skippedText = input.slice(last + 1, t.start);
-            console.log("missing token '" + skippedText + "'");
-            newInput += `<span id='skipped' class='tooltip' title='Skipped'>${skippedText}</span>`
-        }
         let tooltipText = `#${ti} Type ${symbols[t.type]} Line ${t.line}:${t.pos}`;
-        newInput += `<span id='t${ti}' class='tooltip' title='${tooltipText}'>${toktext}</span>`
-        last = t.stop;
+        let chunk = {tooltip:tooltipText, chunktext:toktext};
+        for (let i = t.start; i <= t.stop; i++) {
+            charToChunk[i] = chunk;
+        }
     }
-    return newInput;
+    for (ei in lex_errors) {
+        let e = lex_errors[ei];
+        let errtext = input.slice(e.startidx, e.erridx + 1);
+        let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
+        let chunk = {tooltip:tooltipText, chunktext:errtext};
+        for (let i = e.startidx; i <= e.erridx; i++) {
+            charToChunk[i] = chunk;
+        }
+    }
+    // augment tooltip for any tokens covered by parse error range
+    for (ei in parse_errors) {
+        let e = parse_errors[ei];
+        let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
+        for (let i = tokens[e.startidx].start; i <= tokens[e.stopidx].stop; i++) {
+            charToChunk[i].tooltip += '\n'+tooltipText;
+        }
+    }
+
+    // chunkify skipped chars (adjacent into one chunk)
+    let i = 0;
+    while ( i<input.length ) {
+        if ( charToChunk[i]==null ) {
+            let a = i;
+            while ( charToChunk[i]==null ) {
+                i++;
+            }
+            let b = i;
+            let skippedText = input.slice(a, b);
+            let chunk = {tooltip:"Skipped", chunktext:skippedText};
+            for (let i = a; i < b; i++) {
+                charToChunk[i] = chunk;
+            }
+        }
+        else {
+            i++;
+        }
+    }
+
+    // Walk input again to get unique chunks
+    i = 0;
+    let chunks = [];
+    let previousChunk = null;
+    while ( i<input.length ) {
+        let currentChunk = charToChunk[i];
+        if ( currentChunk!=previousChunk ) {
+            chunks.push(currentChunk);
+        }
+        previousChunk = currentChunk;
+        i++;
+    }
+    console.log(chunks);
+    return chunks;
 }
 
 function showToolErrors(response) {

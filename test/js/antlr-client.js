@@ -16,21 +16,24 @@ function processANTLRResults(response) {
 
     let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
     chunks = chunks.map(c =>
-         `<span ${'error' in c ? 'style="color:red;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
+         `<span ${'error' in c ? 'style="color:#E93A2B; text-decoration: underline dotted #E93A2B;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
     );
     let newInput = chunks.join('');
 
     $("#input").html(newInput);
 
     $(function () {
-        $('#input span').hover(function () {
+        $('#input span').hover(function (event) {
+            let oldStyle = $(this).css('text-decoration');
+            $(this).data( "text-decoration", oldStyle ); // save
             $(this)
                 .css('text-decoration', 'underline')
                 .css('font-weight', 'bold')
                 .css('text-decoration-color', 'darkgray').text();
         }, function () {
+            let oldStyle = $(this).data( "text-decoration");
             $(this)
-                .css('text-decoration', '')
+                .css('text-decoration', oldStyle)
                 .css('font-weight', 'normal')
         });
     });

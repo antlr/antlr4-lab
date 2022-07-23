@@ -1,14 +1,15 @@
 package org.antlr.v4.server;
 
 import org.antlr.runtime.RecognitionException;
+import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.DecisionInfo;
 import org.antlr.v4.runtime.atn.ParseInfo;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.tool.*;
+import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 
-import java.io.IOException;
-import java.io.StringBufferInputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -108,6 +109,7 @@ public class GrammarProcessor {
         CollectLexOrParseSyntaxErrors parseListener = new CollectLexOrParseSyntaxErrors();
         parser.removeErrorListeners();
         parser.addErrorListener(parseListener);
+        parser.setProfile(true);
 
         Rule r = g.rules.get(startRule);
         if (r == null) {
@@ -117,10 +119,11 @@ public class GrammarProcessor {
         ParseTree t = parser.parse(r.index);
         ParseInfo parseInfo = parser.getParseInfo();
 
-        System.out.println("lex msgs" + lexListener.msgs);
-        System.out.println("parse msgs" + parseListener.msgs);
-
-        System.out.println(t.toStringTree(parser));
+//        System.out.println("lex msgs" + lexListener.msgs);
+//        System.out.println("parse msgs" + parseListener.msgs);
+//
+//        System.out.println(t.toStringTree(parser));
+        String[][] profileData = getProfilerTable(parser, parseInfo);
 
         TokenStream tokenStream = parser.getInputStream();
         CharStream inputStream = tokenStream.getTokenSource().getInputStream();
@@ -131,7 +134,27 @@ public class GrammarProcessor {
                 tokenStream,
                 inputStream,
                 lexListener.msgs,
-                parseListener.msgs);
+                parseListener.msgs,
+                profileData);
         return json;
+    }
+
+    private static String[][] getProfilerTable(GrammarParserInterpreter parser, ParseInfo parseInfo) {
+        String[] ruleNamesByDecision = new String[parser.getATN().decisionToState.size()];
+        for(int i = 0; i < ruleNamesByDecision .length; i++) {
+            ruleNamesByDecision[i] = parser.getRuleNames()[parser.getATN().getDecisionState(i).ruleIndex];
+        }
+
+        DecisionInfo[] decisionInfo = parseInfo.getDecisionInfo();
+        String[][] table = new String[decisionInfo.length][profilerColumnNames.length];
+
+        for (int decision = 0; decision < decisionInfo.length; decision++) {
+            for (int col = 0; col < profilerColumnNames.length; col++) {
+                Object colVal = Interpreter.getValue(decisionInfo[decision], ruleNamesByDecision, decision, col);
+                table[decision][col] = colVal.toString();
+            }
+        }
+
+        return table;
     }
 }

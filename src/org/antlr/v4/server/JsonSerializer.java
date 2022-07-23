@@ -1,5 +1,6 @@
 package org.antlr.v4.server;
 
+import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.misc.Interval;
@@ -12,6 +13,8 @@ import org.antlr.v4.tool.ANTLRMessage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 
 // TODO: Ultimately this will go into the ANTLR core and then we can remove this class
 
@@ -102,7 +105,8 @@ public class JsonSerializer {
         }
         TokenStream tokenStream = recog.getInputStream();
         CharStream inputStream = tokenStream.getTokenSource().getInputStream();
-        return toJSON(t, Arrays.asList(ruleNames), recog.getVocabulary(), tokenStream, inputStream, null, null);
+        return toJSON(t, Arrays.asList(ruleNames), recog.getVocabulary(), tokenStream, inputStream,
+                null, null, null);
     }
 
     /** Create a JSON representation of a parse tree and include all other information necessary to reconstruct
@@ -115,7 +119,8 @@ public class JsonSerializer {
                                 final TokenStream tokenStream,
                                 final CharStream inputStream,
                                 List<String> lexMsgs,
-                                List<String> parseMsgs)
+                                List<String> parseMsgs,
+                                String[][] profileData)
     {
         if ( t==null || ruleNames==null ) {
             return null;
@@ -130,7 +135,7 @@ public class JsonSerializer {
         if ( inputStream!=null ) {
             Interval allchar = Interval.of(0, inputStream.size() - 1);
             String input = inputStream.getText(allchar);
-            input = Utils.escapeJSONString(input);
+            input = JsonSerializer.escapeJSONString(input);
             buf.append("\"input\":\"");
             buf.append(input);
             buf.append("\",");
@@ -170,6 +175,35 @@ public class JsonSerializer {
                 String.join(",", lexMsgs),
                 String.join(",", parseMsgs));
         buf.append(errs);
+
+        buf.append(",\"profile\":{\"colnames\":[");
+        for (int i = 0; i < profilerColumnNames.length; i++) {
+            if ( i>0 ) buf.append(',');
+            buf.append(String.format("\"%s\"",profilerColumnNames[i]));
+        }
+        buf.append("],\"data\":[");
+        for (int i = 0; i < profileData.length; i++) {
+            String[] row = profileData[i];
+            if ( i>0 ) buf.append(',');
+            buf.append("[\"");
+            buf.append(String.join("\",\"",row));
+            buf.append("\"]");
+        }
+
+//        for (int i = 0; i < profileData.length; i++) {
+//            String[] row = profileData[i];
+//            // program:0,1,0.167833
+//            String ruleName = row[0];
+//            if ( i>0 ) buf.append(',');
+//            buf.append(String.format("\"%s\":[", ruleName));
+//            for (int j = 1; j < row.length; j++) {
+//                if ( j>1 ) buf.append(',');
+//                buf.append(row[j]);
+//            }
+//            buf.append("]");
+//        }
+        buf.append("]}");
+
         buf.append("}");
 
         return buf.toString();
@@ -220,5 +254,14 @@ public class JsonSerializer {
             return "-1";
         }
         return "<unknown node type>";
+    }
+
+    public static String escapeJSONString(String s) {
+        s = s.replace("\\", "\\\\");
+        s = s.replace("\"", "\\\"");
+        s = s.replace("\n", "\\n");
+        s = s.replace("\r", "\\r");
+        s = s.replace("\t", "\\t");
+        return s;
     }
 }

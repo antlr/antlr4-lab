@@ -12,7 +12,9 @@ function processANTLRResults(response) {
     let tokens = response.data.result.tokens;
     let symbols = response.data.result.symbols;
     let lex_errors = response.data.result.lex_errors;
-    let parse_errors = response.data.result.parse_errors
+    let parse_errors = response.data.result.parse_errors;
+
+    let profile = response.data.result.profile;
 
     let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
     chunks = chunks.map(c =>
@@ -101,10 +103,16 @@ async function run_antlr() {
     var I = $('#input').text();
     var s = $('#start').val();
 
+
     await axios.post("http://localhost:8080/antlr/",
         {grammar: g, lexgrammar: lg, input: I, start: s}
     )
         .then(processANTLRResults)
+        .catch((error) => {
+            if( error.response ){
+                console.log(error.response.data); // => the response payload
+            }
+        });
 }
 
 function initParseTreeView() {

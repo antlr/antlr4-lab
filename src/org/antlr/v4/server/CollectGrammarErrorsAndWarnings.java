@@ -1,6 +1,5 @@
 package org.antlr.v4.server;
 
-import org.antlr.v4.runtime.misc.Utils;
 import org.antlr.v4.tool.ANTLRMessage;
 import org.antlr.v4.tool.ANTLRToolListener;
 
@@ -18,7 +17,7 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
     @Override
     public void error(ANTLRMessage msg) {
         String errText = (String) msg.getArgs()[0];
-        errText = Utils.escapeJSONString(errText);
+        errText = JsonSerializer.escapeJSONString(errText);
         String s = String.format("{\"type\":\"%s\",\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
                 msg.getErrorType().toString(),
                 msg.line,
@@ -30,7 +29,7 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
     @Override
     public void warning(ANTLRMessage msg) {
         String errText = (String) msg.getArgs()[0];
-        errText = Utils.escapeJSONString(errText);
+        errText = JsonSerializer.escapeJSONString(errText);
         String s = String.format("{\"type\":\"%s\",\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
                 msg.getErrorType().toString(),
                 msg.line,

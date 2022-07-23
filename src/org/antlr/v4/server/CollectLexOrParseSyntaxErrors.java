@@ -1,7 +1,6 @@
 package org.antlr.v4.server;
 
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,7 @@ class CollectLexOrParseSyntaxErrors extends BaseErrorListener {
                             int line, int charPositionInLine,
                             String msg,
                             org.antlr.v4.runtime.RecognitionException e) {
-        msg = Utils.escapeJSONString(msg);
+        msg = JsonSerializer.escapeJSONString(msg);
         String err;
         if ( recognizer instanceof Lexer ) {
             int erridx = ((Lexer) recognizer)._input.index(); // where we detected error

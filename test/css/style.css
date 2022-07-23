@@ -11,6 +11,18 @@
     white-space: pre-line;
 }
 
+.ui-tabs-nav {
+    background: transparent;
+    border-width: 0px 0px 1px 0px;
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+}
+
+.ui-tabs-panel {
+    margin: 0em 0.2em 0.2em 0.2em;
+}
+
 .inputbox {
     border:1px solid darkgray;
     font-size:14px;

@@ -66,6 +66,8 @@ function processANTLRResults(response) {
     $("#tree").html(buf.join('\n'))
 
     initParseTreeView();
+
+    buildProfileTableView(profile.colnames, profile.data);
 }
 
 function walk(t, result, input, buf) {
@@ -123,6 +125,29 @@ function initParseTreeView() {
             this.classList.toggle("check-box");
         });
     }
+}
+
+function buildProfileTableView(colnames, rows) {
+    let table = "<table class='profile-table'>\n";
+    table += "<thead>\n";
+    table += "  <tr>\n";
+    for (const name of colnames) {
+        table += "<th>"+name+"</th>";
+    }
+    table += "  </tr>\n";
+    table += "</thead>\n";
+
+    table += "<tbody>\n";
+    for (const row of rows) {
+        table += "      <tr>";
+        for (const v of row) {
+            table += "<td>"+v+"</td>";
+        }
+        table += "</tr>\n";
+    }
+    table += "</tbody>\n";
+    table += "</table>\n";
+    $("#profile").html(table)
 }
 
 function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {

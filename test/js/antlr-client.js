@@ -1,8 +1,8 @@
 function processANTLRResults(response) {
-    var g = $('#grammar').val();
-    var lg = $('#lexgrammar').val();
+    var g = $('#grammar').text();
+    var lg = $('#lexgrammar').text();
     var I = $('#input').text();
-    var s = $('#start').val();
+    var s = $('#start').text();
     console.log(response.data.result);
 
     // $("#t1").tooltip( "option", "content", "Awesome title!" );
@@ -100,11 +100,10 @@ function walk(t, result, input, buf) {
 }
 
 async function run_antlr() {
-    var g = $('#grammar').val();
-    var lg = $('#lexgrammar').val();
+    var g = $('#grammar').text();
+    var lg = $('#lexgrammar').text();
     var I = $('#input').text();
-    var s = $('#start').val();
-
+    var s = $('#start').text();
 
     await axios.post("http://localhost:8080/antlr/",
         {grammar: g, lexgrammar: lg, input: I, start: s}
@@ -221,21 +220,24 @@ function showToolErrors(response) {
         response.data.lexer_grammar_errors.length > 0 ||
         response.data.warnings.length > 0)
     {
-        let errors = "<ul>\n";
+        let errors = "";
         response.data.parser_grammar_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+            errors += `<span class="error">${e.line}:${e.pos} ${e.msg}</span><br>`;
         });
         response.data.lexer_grammar_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+            errors += `<span class="error">${e.line}:${e.pos} ${e.msg}</span><br>`;
         });
         response.data.warnings.forEach( function(w) {
-            errors += `<li>${w.line}:${w.pos} ${w.msg}</li>`;
+            errors += `<span class="error">${w.line}:${w.pos} ${w.msg}</span><br>`;
         });
-        errors += "</ul>\n";
-        $("#console").html(errors);
+        errors += "\n";
+        $("#tool_errors").html(errors);
+        $("#tool_errors").show();
+        $("#tool_errors_header").show();
     }
     else {
-        $("#console").text("");
+        $("#tool_errors").hide();
+        $("#tool_errors_header").hide();
     }
 }
 
@@ -243,18 +245,21 @@ function showParseErrors(response) {
     if (response.data.result.lex_errors.length > 0 ||
         response.data.result.parse_errors.length > 0 )
     {
-        let errors = "<ul>\n";
+        let errors = "";
         response.data.result.lex_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+            errors += `<span class="error">${e.line}:${e.pos} ${e.msg}</span><br>`;
         });
         response.data.result.parse_errors.forEach( function(e) {
-            errors += `<li>${e.line}:${e.pos} ${e.msg}</li>`;
+            errors += `<span class="error">${e.line}:${e.pos} ${e.msg}</span><br>`;
         });
-        errors += "</ul>\n";
+        errors += "\n";
         $("#parse_errors").html(errors);
+        $("#parse_errors").show();
+        $("#parse_errors_header").show();
     }
     else {
-        $("#parse_errors").text("");
+        $("#parse_errors").hide();
+        $("#parse_errors_header").hide();
     }
 }
 
@@ -265,4 +270,28 @@ $(document).ready(function() {
     };
 
     $(document).tooltip();
+
+    $("#grammar").show();
+    $("#lexgrammar").hide();
+    $("#parsertab").addClass("tabs-header-selected");
+    $("#lexertab").removeClass("tabs-header-selected");
+
+    $( "#parsertab" ).click(function() {
+        $("#grammar").show();
+        $("#lexgrammar").hide();
+        $("#parsertab").addClass("tabs-header-selected");
+        $("#lexertab").removeClass("tabs-header-selected");
+    });
+    $( "#lexertab" ).click(function() {
+        $("#grammar").hide();
+        $("#lexgrammar").show();
+        $("#parsertab").removeClass("tabs-header-selected");
+        $("#lexertab").addClass("tabs-header-selected");
+    });
+
+    $("#tool_errors").hide();
+    $("#parse_errors").hide();
+    $("#tool_errors_header").hide();
+    $("#parse_errors_header").hide();
+
 });

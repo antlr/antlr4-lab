@@ -11,9 +11,11 @@
 </head>
 <body>
 
-    <P>
-<TEXTAREA name="grammar" id="grammar" rows="10" cols="40">
-parser grammar ExprParser;
+    <div class="tabs-header">
+        <span id="parsertab" class="tab-header">Parser</span>&nbsp;
+        <span id="lexertab" class="tab-header">Lexer</span>
+    </div>
+    <div class='editor' id="grammar" contenteditable="true"  style="white-space: pre-wrap;">parser grammar ExprParser;
 options { tokenVocab=ExprLexer; }
 
 program
@@ -36,9 +38,9 @@ expr: ID
     ;
 
 func : ID '(' expr (',' expr)* ')' ;
-</TEXTAREA>
+</div>
 
-<TEXTAREA name="lexgrammar" id="lexgrammar" rows="10" cols="40">
+    <div class='editor' id="lexgrammar" contenteditable="true"  style="white-space: pre-wrap;">
 lexer grammar ExprLexer;
 
 AND : 'and' ;
@@ -55,25 +57,31 @@ RCURLY : '}' ;
 INT : [0-9]+ ;
 ID: [a-zA-Z_][a-zA-Z_0-9]* ;
 WS: [ \t\n\r\f]+ -> skip ;
-</TEXTAREA>
-            </P>
-<p>
+</div>
+
+
 <!--    <div class='inputbox' id="input" contenteditable="true"  style="white-space: pre-wrap;">foo(able, y, z) {-->
 <!--        x = x and y or z; g(30);-->
 <!--    }-->
 <!--    </div>-->
-    <div class='inputbox' id="input" contenteditable="true"  style="white-space: pre-wrap;">xy = ! 3;</div>
-</p>
-    <INPUT type="text" id="start" name="start" value="program"><div id="tree"></div>
+    <br>
+    <span class="tabs-header">Input</span>
+    <div class='editor' id="input" contenteditable="true"  style="min-height: 3em">xy = 3+foo;</div>
+
+    <br>
+    <span class="tabs-header">Start rule</span>
+    <div class='editor' id="start" contenteditable="true" style="min-height: 1em; max-width: 20em">program</div>
+    <div id="tree"></div>
     <br>
     <br>
     <button type="button" onclick="run_antlr()">RUN</button>
 
 <br>
 <br>
-    <div id="console"></div> <!-- tool errors -->
-    <div id="parse_errors"></div>
-
+    <span id="tool_errors_header" class="tabs-header">Tool console</span><br>
+    <div id="tool_errors" class="console"></div>
+    <span id="parse_errors_header" class="tabs-header">Parse console</span><br>
+    <div id="parse_errors" class="console"></div>
 
     <div id="profile"></div>
 

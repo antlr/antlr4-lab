@@ -36,15 +36,6 @@ public class GrammarProcessor {
 
             warnings.addAll(lexlistener.warnings);
             warnings.addAll(parselistener.warnings);
-
-//            if ( lexlistener.errors.size()>0 || parselistener.errors.size()>0 ) {
-//                return String.format("{\"tool_warnings\":[%s],\"tool_parser_grammar_errors\":[%s],"+
-//                                "\"tool_lexer_grammar_errors\":[%s],"+
-//                                "\"result\":{}, \"result\":{}}",
-//                        String.join(",", warnings),
-//                        String.join(",", parselistener.errors),
-//                        String.join(",", lexlistener.errors));
-//            }
         }
         catch (RecognitionException re) {
             // shouldn't get here.
@@ -53,7 +44,7 @@ public class GrammarProcessor {
 
         String result = "{}";
         if ( lexlistener.errors.size()==0 && parselistener.errors.size()==0 ) {
-            result = getParseResultJSON(g, lg, startRule, input);
+            result = parseAndGetJSON(g, lg, startRule, input);
 //		System.out.println(result);
         }
 
@@ -65,24 +56,11 @@ public class GrammarProcessor {
                 String.join(",", parselistener.errors),
                 String.join(",", lexlistener.errors),
                 result);
-//        if ( lexlistener.errors.size()>0 ) {
-//            json = String.format("{\"tool_warnings\":[%s],\"tool_parser_grammar_errors\":[%s],\"tool_lexer_grammar_errors\":[%s],\"result\":{}, \"result\":%s}",
-//                    String.join(",", warnings),
-//                    String.join(",", parselistener.errors),
-//                    String.join(",", lexlistener.errors),
-//                    json);
-//        }
-//        else {
-//            json = String.format("{\"tool_warnings\":[%s],\"tool_parser_grammar_errors\":[%s],\"result\":{}, \"result\":%s}",
-//                    String.join(",", warnings),
-//                    String.join(",", parselistener.errors),
-//                    json);
-//        }
 
         return result;
     }
 
-    private static String getParseResultJSON(Grammar g, LexerGrammar lg, String startRule, String input) {
+    private static String parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input) {
 //        CharStream charStream = CharStreams.fromString(input);
         CharStream charStream = null;
         try {

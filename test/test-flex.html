@@ -1,0 +1,73 @@
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <style>
+        .editor {
+            border: solid .5px #7F7F7F;
+            font-family: 'Inconsolata', 'Menlo', monospace;
+            font-size: 12px;
+            color: #404040;
+            white-space: pre-wrap;
+            padding: 3px;
+            overflow: auto;
+            min-height: 10em;
+            max-height: 20em;
+        }
+
+        .editor:focus {
+            outline: none;
+        }
+
+        .wrapper {
+            display: flex;
+        }
+    </style>
+
+    <script>
+
+    </script>
+
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="top">
+
+<div id="grammar" class="editor" contenteditable="true">parser grammar ExprParser;
+options { tokenVocab=ExprLexer; }
+
+program
+    : stat EOF
+    | def EOF
+    ;
+
+stat: ID '=' expr ';'
+    | expr ';'
+    ;
+
+def : ID '(' ID (',' ID)* ')' '{' stat* '}' ;
+
+expr: ID
+    | INT
+    | func
+    | 'not' expr
+    | expr 'and' expr
+    | expr 'or' expr
+    ;
+
+func : ID '(' expr (',' expr)* ')' ;
+</div>
+    </div>
+
+    <div class="bottom">
+<div id="input" class="editor" contenteditable="true" style="min-height: 3em">x = f(3,4);
+</div>
+    </div>
+
+</div>
+
+</body>
+</html>

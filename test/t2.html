@@ -65,25 +65,33 @@ WS: [ \t\n\r\f]+ -> skip ;
 <!--    }-->
 <!--    </div>-->
     <br>
-    <span class="tabs-header">Input</span>
+    <span class="chunk-header">Input</span>
     <div class='editor' id="input" contenteditable="true"  style="min-height: 3em">xy = 3+foo;</div>
 
     <br>
-    <span class="tabs-header">Start rule</span>
-    <div class='editor' id="start" contenteditable="true" style="min-height: 1em; max-width: 20em">program</div>
+    <span class="chunk-header">Start rule</span><br>
+    <span class='editor' id="start" contenteditable="true" style="min-height: 1em; min-width: 10em; max-width: 20em">program</span>
+    <button type="button" class="run-button" onclick="run_antlr()">Run</button>
+    <button id="profile_choice" type="button" class="profile-button">Show profiler</button><br>
+
+    <!--    <br>-->
+<!--    <div class="tabs-header">-->
+<!--        <span id="consoles_tab" class="tab-header">Console</span>&nbsp;-->
+<!--        <span id="tree_tab" class="tab-header">Parse tree</span>-->
+<!--        <span id="profile_tab" class="tab-header">Profiles</span>-->
+<!--    </div>-->
+
+    <br>
+    <span id="tree_header" class="chunk-header">Parse tree</span>
     <div id="tree"></div>
-    <br>
-    <br>
-    <button type="button" onclick="run_antlr()">RUN</button>
 
-<br>
-<br>
-    <span id="tool_errors_header" class="tabs-header">Tool console</span><br>
-    <div id="tool_errors" class="console"></div>
-    <span id="parse_errors_header" class="tabs-header">Parse console</span><br>
-    <div id="parse_errors" class="console"></div>
-
+    <span id="profile_header" class="chunk-header"><br>Parser profile info</span>
     <div id="profile"></div>
+    <br>
+    <span id="tool_errors_header" class="chunk-header">Tool console</span>
+    <div id="tool_errors" class="console"></div>
+    <span id="parse_errors_header" class="chunk-header">Parser console</span>
+    <div id="parse_errors" class="console"></div>
 
     <script>
             var toggler = document.getElementsByClassName("box");

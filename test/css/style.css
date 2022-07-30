@@ -3,8 +3,8 @@
     font-family: 'Inconsolata', 'Menlo', monospace;
     font-size: 12px;
     color: #404040;
-    white-space: pre-wrap;
     padding: 3px;
+    white-space: pre-wrap;
     overflow: auto;
     min-height: 10em;
     max-height: 20em;
@@ -15,6 +15,14 @@
 }
 
 .tabs-header {
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    color: #404040;
+    font-weight: normal;
+    padding-bottom: .5em;
+}
+
+.chunk-header {
     font-family: 'Arial', sans-serif;
     font-size: 13px;
     color: #404040;
@@ -77,6 +85,7 @@ ul, #treeUL {
 }
 
 #treeUL {
+    margin: 0;
     padding: 0;
 }
 
@@ -86,7 +95,8 @@ ul, #treeUL {
     -moz-user-select: none; /* Firefox 2+ */
     -ms-user-select: none; /* IE 10+ */
     user-select: none;
-    font-family: monospace;
+    font-size: 12px;
+    font-family: 'Inconsolata', 'Menlo', monospace;
 }
 
 .tree-root::before {
@@ -94,20 +104,20 @@ ul, #treeUL {
     font-size: 12px;
     color: darkgray;
     display: inline-block;
-    margin-right: 2px;
+    margin-right: 1px;
 }
 
-.check-box::before {
+.expanded-tree::before {
     content: "\FE40";
-    position: relative;
-    top: 5px;
+    /*position: relative;*/
+    /*top: 5px;*/
     font-size: 12px;
     color: darkgray;
-    margin-right: 2px;
 }
 
 .tree-token {
-    font-family: monospace;
+    font-size: 12px;
+    font-family: 'Inconsolata', 'Menlo', monospace;
 }
 
 .nested {
@@ -151,4 +161,36 @@ ul, #treeUL {
 .profile-table td {
     /*padding-left: 30px;*/
     width: 14%;
+}
+
+/* base button properties */
+[class*="-button"] {
+    appearance: none;
+    border: 1px solid rgba(27, 31, 35, .15);
+    border-radius: 2px;
+    box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: inline-block;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    line-height: 17px;
+    /*padding: 6px 16px;*/
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.run-button {
+    background-color: #2ea44f;
+    color: #fff;
+}
+
+.profile-button {
+    background-color: #eeeeee;
 }

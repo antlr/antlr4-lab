@@ -5,6 +5,13 @@ function processANTLRResults(response) {
     var s = $('#start').text();
     console.log(response.data.result);
 
+    if ( "arg_error" in response.data ) {
+        $("#tool_errors").html(`<span class="error">${response.data.arg_error}</span><br>`);
+        $("#tool_errors").show();
+        $("#tool_errors_header").show();
+        return;
+    }
+
     // $("#t1").tooltip( "option", "content", "Awesome title!" );
     showToolErrors(response);
     showParseErrors(response);
@@ -105,6 +112,8 @@ async function run_antlr() {
     var I = $('#input').text();
     var s = $('#start').text();
 
+    $("#profile_choice").show();
+
     await axios.post("http://localhost:8080/antlr/",
         {grammar: g, lexgrammar: lg, input: I, start: s}
     )
@@ -117,11 +126,12 @@ async function run_antlr() {
 }
 
 function initParseTreeView() {
+    $("#tree_header").show();
     let toggler = document.getElementsByClassName("tree-root");
     for (let i = 0; i < toggler.length; i++) {
         toggler[i].addEventListener("click", function () {
             this.parentElement.querySelector(".nested").classList.toggle("active");
-            this.classList.toggle("check-box");
+            this.classList.toggle("expanded-tree");
         });
     }
 }
@@ -222,13 +232,13 @@ function showToolErrors(response) {
     {
         let errors = "";
         response.data.parser_grammar_errors.forEach( function(e) {
-            errors += `<span class="error">${e.line}:${e.pos} ${e.msg}</span><br>`;
+            errors += `<span class="error">${e.msg}</span><br>`;
         });
         response.data.lexer_grammar_errors.forEach( function(e) {
-            errors += `<span class="error">${e.line}:${e.pos} ${e.msg}</span><br>`;
+            errors += `<span class="error">${e.msg}</span><br>`;
         });
         response.data.warnings.forEach( function(w) {
-            errors += `<span class="error">${w.line}:${w.pos} ${w.msg}</span><br>`;
+            errors += `<span class="error">${w.msg}</span><br>`;
         });
         errors += "\n";
         $("#tool_errors").html(errors);
@@ -271,6 +281,9 @@ $(document).ready(function() {
 
     $(document).tooltip();
 
+    $("#tree_header").hide();
+    $("#profile_header").hide();
+
     $("#grammar").show();
     $("#lexgrammar").hide();
     $("#parsertab").addClass("tabs-header-selected");
@@ -289,9 +302,24 @@ $(document).ready(function() {
         $("#lexertab").addClass("tabs-header-selected");
     });
 
+    $("#profile_choice").hide();
+    $("#profile_header").hide();
+    $("#profile").hide();
+    $("#profile_choice").click(function () {
+        if ( $("#profile_choice").text().startsWith("Show") ) {
+            $("#profile_choice").text("Hide profiler");
+            $("#profile_header").show();
+            $("#profile").show();
+        }
+        else {
+            $("#profile_choice").text("Show profiler");
+            $("#profile_header").hide();
+            $("#profile").hide();
+        }
+    });
+
     $("#tool_errors").hide();
     $("#parse_errors").hide();
     $("#tool_errors_header").hide();
     $("#parse_errors_header").hide();
-
 });

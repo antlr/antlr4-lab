@@ -30,12 +30,34 @@ public class ANTLRHttpServer {
 			JsonObject jsonObj = jsonReader.readObject();
 			System.out.println(jsonObj);
 
-			String grammar = jsonObj.getString("grammar");
-			String lexGrammar = jsonObj.getString("lexgrammar"); // can be null
-			String input = jsonObj.getString("input");
-			String startRule = jsonObj.getString("start");
+			String grammar = jsonObj.getString("grammar", "");
+			String lexGrammar = jsonObj.getString("lexgrammar", ""); // can be null
+			String input = jsonObj.getString("input", "");
+			String startRule = jsonObj.getString("start", "");
 
-			String json = interp(grammar, lexGrammar, input, startRule);
+			String json;
+			if ( grammar.strip().length()==0 && lexGrammar.strip().length()==0 ) {
+				json = "{\"arg_error\":\"missing either combined grammar or lexer and parser both\"}";
+			}
+			else if ( grammar.strip().length()==0 && lexGrammar.strip().length()>0 ) {
+				json = "{\"arg_error\":\"missing parser grammar\"}";
+			}
+			else if ( startRule.strip().length()==0 ) {
+				json = "{\"arg_error\":\"missing start rule\"}";
+			}
+			else if ( input.length()==0 ) {
+				json = "{\"arg_error\":\"missing input\"}";
+			}
+			else {
+				try {
+					json = interp(grammar, lexGrammar, input, startRule);
+				}
+				catch (Throwable e) {
+					System.err.println("whoa");
+					e.printStackTrace(System.err);
+					json = "{}";
+				}
+			}
 
 			response.setStatus(HttpServletResponse.SC_OK);
 			PrintWriter w = response.getWriter();

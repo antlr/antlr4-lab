@@ -1,6 +1,7 @@
 package org.antlr.v4.server;
 
 import org.antlr.runtime.RecognitionException;
+import org.antlr.v4.Tool;
 import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.DecisionInfo;
@@ -22,11 +23,14 @@ public class GrammarProcessor {
         startRule = startRule.strip();
         Grammar g = null;
         LexerGrammar lg = null;
-        CollectGrammarErrorsAndWarnings lexlistener = new CollectGrammarErrorsAndWarnings();
-        CollectGrammarErrorsAndWarnings parselistener = new CollectGrammarErrorsAndWarnings();
+        Tool antlrTool = new Tool();
+        ErrorManager errMgr = new ErrorManager(antlrTool);
+        errMgr.setFormat("antlr");
+        CollectGrammarErrorsAndWarnings lexlistener = new CollectParserGrammarErrorsAndWarnings(errMgr);
+        CollectGrammarErrorsAndWarnings parselistener = new CollectLexerGrammarErrorsAndWarnings(errMgr);
         List<String> warnings = new ArrayList<>();
         try {
-            if ( lexGrammar!=null ) {
+            if ( lexGrammar!=null && lexGrammar.strip().length()>0 ) {
                 lg = new LexerGrammar(lexGrammar, lexlistener);
                 g = new IgnoreTokenVocabGrammar(null, grammar, lg, parselistener);
             }

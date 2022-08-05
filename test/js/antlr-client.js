@@ -14,6 +14,13 @@ function processANTLRResults(response) {
         return;
     }
 
+    if ( "exception" in response.data ) {
+        $("#tool_errors").html(`<span class="error">${response.data.exception_trace}<br></span>`);
+        $("#tool_errors").show();
+        $("#tool_errors_header").show();
+        return;
+    }
+
     // $("#t1").tooltip( "option", "content", "Awesome title!" );
     showToolErrors(response);
     showParseErrors(response);
@@ -67,8 +74,8 @@ function processANTLRResults(response) {
     );
     $(document).tooltip("disable");
 
-    tree = response.data.result.tree;
-    buf = ['<ul id="treeUL">'];
+    let tree = response.data.result.tree;
+    let buf = ['<ul id="treeUL">'];
     walk(tree, response.data.result, I, buf);
     buf.push('</ul>');
     console.log(buf.join('\n'));
@@ -82,6 +89,11 @@ function processANTLRResults(response) {
 function walk(t, result, input, buf) {
     if (t == null) return;
 
+    if ( 'error' in t ) {
+        buf.push(`<li class="tree-token" style="color: #905857">&lt;error:${t.error}&gt;</li>`);
+        return;
+    }
+
     let symbols = result.symbols;
     let rulenames = result.rules;
     let tokens = result.tokens;
@@ -92,7 +104,7 @@ function walk(t, result, input, buf) {
     if ( 'kids' in t && t.kids.length > 0) {
         buf.push('<ul class="nested">');
         for (let i = 0; i < t.kids.length; i++) {
-            kid = t.kids[i];
+            let kid = t.kids[i];
             if (typeof (kid) == 'number') {
                 let a = tokens[kid].start;
                 let b = tokens[kid].stop;
@@ -132,7 +144,10 @@ function initParseTreeView() {
     let toggler = document.getElementsByClassName("tree-root");
     for (let i = 0; i < toggler.length; i++) {
         toggler[i].addEventListener("click", function () {
-            this.parentElement.querySelector(".nested").classList.toggle("active");
+            let nested = this.parentElement.querySelector(".nested");
+            if (nested != null) {
+                nested.classList.toggle("active");
+            }
             this.classList.toggle("expanded-tree");
         });
     }
@@ -163,7 +178,7 @@ function buildProfileTableView(colnames, rows) {
 
 function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
     let charToChunk = new Array(input.length);
-    for (ti in tokens) {
+    for (let ti in tokens) {
         let t = tokens[ti];
         let toktext = input.slice(t.start, t.stop + 1);
         let tooltipText = `#${ti} Type ${symbols[t.type]} Line ${t.line}:${t.pos}`;
@@ -172,7 +187,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
             charToChunk[i] = chunk;
         }
     }
-    for (ei in lex_errors) {
+    for (let ei in lex_errors) {
         let e = lex_errors[ei];
         let errtext = input.slice(e.startidx, e.erridx + 1);
         let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
@@ -182,7 +197,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
         }
     }
     // augment tooltip for any tokens covered by parse error range
-    for (ei in parse_errors) {
+    for (let ei in parse_errors) {
         let e = parse_errors[ei];
         let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
         for (let i = tokens[e.startidx].start; i <= tokens[e.stopidx].stop; i++) {

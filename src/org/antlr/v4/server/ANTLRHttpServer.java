@@ -10,10 +10,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringReader;
+import java.io.*;
 
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
@@ -21,44 +18,55 @@ public class ANTLRHttpServer {
 	public static class HelloWorldServlet extends DefaultServlet {
 		@Override
 		public void doPost(HttpServletRequest request, HttpServletResponse response)
-				throws IOException {
-			response.setContentType("text/plain;charset=utf-8");
-			response.setContentType("text/html;");
-			response.addHeader("Access-Control-Allow-Origin", "*");
-
-			JsonReader jsonReader = Json.createReader(request.getReader());
-			JsonObject jsonObj = jsonReader.readObject();
-			System.out.println(jsonObj);
-
-			String grammar = jsonObj.getString("grammar", "");
-			String lexGrammar = jsonObj.getString("lexgrammar", ""); // can be null
-			String input = jsonObj.getString("input", "");
-			String startRule = jsonObj.getString("start", "");
-
+			throws IOException
+		{
 			String json;
-			if ( grammar.strip().length()==0 && lexGrammar.strip().length()==0 ) {
-				json = "{\"arg_error\":\"missing either combined grammar or lexer and parser both\"}";
-			}
-			else if ( grammar.strip().length()==0 && lexGrammar.strip().length()>0 ) {
-				json = "{\"arg_error\":\"missing parser grammar\"}";
-			}
-			else if ( startRule.strip().length()==0 ) {
-				json = "{\"arg_error\":\"missing start rule\"}";
-			}
-			else if ( input.length()==0 ) {
-				json = "{\"arg_error\":\"missing input\"}";
-			}
-			else {
-				try {
-					json = interp(grammar, lexGrammar, input, startRule);
-				}
-				catch (Throwable e) {
-					System.err.println("whoa");
-					e.printStackTrace(System.err);
-					json = "{}";
-				}
-			}
+			try {
+				response.setContentType("text/plain;charset=utf-8");
+				response.setContentType("text/html;");
+				response.addHeader("Access-Control-Allow-Origin", "*");
 
+				JsonReader jsonReader = Json.createReader(request.getReader());
+				JsonObject jsonObj = jsonReader.readObject();
+				System.out.println(jsonObj);
+
+				String grammar = jsonObj.getString("grammar", "");
+				String lexGrammar = jsonObj.getString("lexgrammar", ""); // can be null
+				String input = jsonObj.getString("input", "");
+				String startRule = jsonObj.getString("start", "");
+
+				if (grammar.strip().length() == 0 && lexGrammar.strip().length() == 0) {
+					json = "{\"arg_error\":\"missing either combined grammar or lexer and parser both\"}";
+				}
+				else if (grammar.strip().length() == 0 && lexGrammar.strip().length() > 0) {
+					json = "{\"arg_error\":\"missing parser grammar\"}";
+				}
+				else if (startRule.strip().length() == 0) {
+					json = "{\"arg_error\":\"missing start rule\"}";
+				}
+				else if (input.length() == 0) {
+					json = "{\"arg_error\":\"missing input\"}";
+				}
+				else {
+					try {
+						json = interp(grammar, lexGrammar, input, startRule);
+					}
+					catch (Throwable e) {
+						e.printStackTrace(System.err);
+						json = "{}";
+					}
+				}
+			}
+			catch (Exception e) {
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				e.printStackTrace(pw);
+				String trace = JsonSerializer.escapeJSONString(sw.toString());
+				String msg = e.getMessage();
+				msg = JsonSerializer.escapeJSONString(msg);
+				json = "{\"exception_trace\":\""+trace+"\",\"exception\":\""+ msg +"\"}";
+
+			}
 			response.setStatus(HttpServletResponse.SC_OK);
 			PrintWriter w = response.getWriter();
 			w.write(json);

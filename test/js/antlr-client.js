@@ -1,3 +1,5 @@
+"use strict";
+
 function processANTLRResults(response) {
     var g = $('#grammar').text();
     var lg = $('#lexgrammar').text();

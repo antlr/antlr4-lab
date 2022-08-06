@@ -118,15 +118,15 @@ public class ANTLRHttpServer {
 		holderHome.setInitParameter("resourceBase", "static");
 		holderHome.setInitParameter("dirAllowed","true");
 		holderHome.setInitParameter("pathInfoOnly","true");
-		context.addServlet(holderHome,"/static/*");
+		context.addServlet(holderHome,"/*");
 
-		ServletHolder testHome = new ServletHolder("static-test", DefaultServlet.class);
+		ServletHolder testHome = new ServletHolder("static", DefaultServlet.class);
 		testHome.setInitParameter("resourceBase", "test");
 		testHome.setInitParameter("dirAllowed","true");
 		testHome.setInitParameter("pathInfoOnly","true");
 		context.addServlet(testHome,"/test/*");
 
-//		ServletHolder holderPwd = new ServletHolder("default", DefaultServlet.class);
+		//		ServletHolder holderPwd = new ServletHolder("default", DefaultServlet.class);
 //		holderPwd.setInitParameter("dirAllowed","true");
 //		context.addServlet(holderPwd,"/");
 

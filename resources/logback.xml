@@ -1,0 +1,20 @@
+<configuration>
+    <property name="LOG_DIR" value="/tmp" />
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/tests.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <!-- keep 30 days' worth of history capped at 3GB total size -->
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{yyyy-MMM-dd; HH:mm:ss.SSS} [%thread]:%n%msg%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="org.antlr.v4.server.ANTLRHttpServer" level="INFO">
+        <appender-ref ref="FILE"/>
+    </logger>
+</configuration>

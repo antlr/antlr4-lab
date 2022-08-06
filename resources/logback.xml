@@ -1,5 +1,5 @@
 <configuration>
-    <property name="LOG_DIR" value="/tmp" />
+    <property name="LOG_DIR" value="/var/log/antlrlab" />
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/antlrlab.log</file>
         <append>true</append>
@@ -14,7 +14,7 @@
             <pattern>%date{yyyy-MMM-dd; HH:mm:ss.SSS} [%thread]:%n%msg%n</pattern>
         </encoder>
     </appender>
-    <logger name="ANTLRHttpServer" level="INFO">
+    <logger name="org.antlr.v4.server.ANTLRHttpServer" level="INFO">
         <appender-ref ref="FILE"/>
     </logger>
 

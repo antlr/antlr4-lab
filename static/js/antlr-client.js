@@ -128,7 +128,7 @@ async function run_antlr() {
 
     $("#profile_choice").show();
 
-    await axios.post("http://localhost:80/antlr/",
+    await axios.post("http://lab.antlr.org/antlr/",
         {grammar: g, lexgrammar: lg, input: I, start: s}
     )
         .then(processANTLRResults)

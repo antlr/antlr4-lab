@@ -22,5 +22,5 @@ sudo chmod 777 /var/log/antlrlab
 Launch!
 
 ```bash
-sudo java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.1-SNAPSHOT/antlr4-lab-0.1-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
+sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.1-SNAPSHOT/antlr4-lab-0.1-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
 ```

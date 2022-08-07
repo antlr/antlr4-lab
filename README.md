@@ -17,6 +17,8 @@ mvn install
 
 sudo mkdir /var/log/antlrlab
 sudo chmod 777 /var/log/antlrlab
+git config --global user.email "..."
+git config --global user.name "Terence Parr"
 ```
 
 Launch!

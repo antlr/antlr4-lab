@@ -50,7 +50,7 @@ public class GrammarProcessor {
 
         Rule r = g.rules.get(startRule);
         if (r == null) {
-            warnings.add("\"No such start rule: \" + startRule");
+            warnings.add("No such start rule: " + startRule);
             System.err.println("No such start rule: " + startRule);
         }
         else {

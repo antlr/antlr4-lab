@@ -1,11 +1,15 @@
 "use strict";
 
+// let ANTLR_SERVICE = "http://lab.antlr.org/antlr/";
+let ANTLR_SERVICE = "http://localhost/antlr/";
+
 function processANTLRResults(response) {
     var g = $('#grammar').text();
     var lg = $('#lexgrammar').text();
     var I = $('#input').text();
     var s = $('#start').text();
-    console.log(response.data.result);
+    let result = response.data.result;
+    console.log(result);
 
     if ( "arg_error" in response.data ) {
         $("#tool_errors").html(`<span class="error">${response.data.arg_error}</span><br>`);
@@ -21,16 +25,19 @@ function processANTLRResults(response) {
         return;
     }
 
-    // $("#t1").tooltip( "option", "content", "Awesome title!" );
+    if ( Object.keys(result).length===0 ) {
+        return;
+    }
+
     showToolErrors(response);
     showParseErrors(response);
 
-    let tokens = response.data.result.tokens;
-    let symbols = response.data.result.symbols;
-    let lex_errors = response.data.result.lex_errors;
-    let parse_errors = response.data.result.parse_errors;
+    let tokens = result.tokens;
+    let symbols = result.symbols;
+    let lex_errors = result.lex_errors;
+    let parse_errors = result.parse_errors;
 
-    let profile = response.data.result.profile;
+    let profile = result.profile;
 
     let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
     chunks = chunks.map(c =>
@@ -74,9 +81,9 @@ function processANTLRResults(response) {
     );
     $(document).tooltip("disable");
 
-    let tree = response.data.result.tree;
+    let tree = result.tree;
     let buf = ['<ul id="treeUL">'];
-    walk(tree, response.data.result, I, buf);
+    walk(tree, result, I, buf);
     buf.push('</ul>');
     console.log(buf.join('\n'));
     $("#tree").html(buf.join('\n'))
@@ -127,7 +134,7 @@ async function run_antlr() {
 
     $("#profile_choice").show();
 
-    await axios.post("http://lab.antlr.org/antlr/",
+    await axios.post(ANTLR_SERVICE,
         {grammar: g, lexgrammar: lg, input: I, start: s}
     )
         .then(processANTLRResults)
@@ -269,14 +276,6 @@ function showToolErrors(response) {
 }
 
 function showParseErrors(response) {
-    if ( !('lex_errors' in response.data.result) ||
-         !('parse_errors' in response.data.result) )
-    {
-        $("#parse_errors").hide();
-        $("#parse_errors_header").hide();
-        return;
-    }
-
     if (response.data.result.lex_errors.length > 0 ||
         response.data.result.parse_errors.length > 0 )
     {

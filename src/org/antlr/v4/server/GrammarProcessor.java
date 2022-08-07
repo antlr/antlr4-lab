@@ -51,7 +51,7 @@ public class GrammarProcessor {
         Rule r = g.rules.get(startRule);
         if (r == null) {
             String w = "No such start rule: " + startRule;
-            warnings.add('"'+w+'"');
+            warnings.add("{\"msg\":\""+w+"\"}");
             System.err.println(w);
         }
         else {

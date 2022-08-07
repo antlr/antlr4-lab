@@ -25,11 +25,12 @@ function processANTLRResults(response) {
         return;
     }
 
+    showToolErrors(response);
+
     if ( Object.keys(result).length===0 ) {
         return;
     }
 
-    showToolErrors(response);
     showParseErrors(response);
 
     let tokens = result.tokens;

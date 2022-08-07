@@ -47,9 +47,16 @@ public class GrammarProcessor {
         }
 
         String result = "{}";
-        if ( lexlistener.errors.size()==0 && parselistener.errors.size()==0 ) {
-            result = parseAndGetJSON(g, lg, startRule, input);
-//		System.out.println(result);
+
+        Rule r = g.rules.get(startRule);
+        if (r == null) {
+            warnings.add("\"No such start rule: \" + startRule");
+            System.err.println("No such start rule: " + startRule);
+        }
+        else {
+            if (lexlistener.errors.size() == 0 && parselistener.errors.size() == 0) {
+                result = parseAndGetJSON(g, lg, startRule, input);
+            }
         }
 
         result = String.format("{\"warnings\":[%s],"+
@@ -65,13 +72,13 @@ public class GrammarProcessor {
     }
 
     private static String parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input) {
-//        CharStream charStream = CharStreams.fromString(input);
         CharStream charStream = null;
         try {
             charStream = CharStreams.fromStream(new StringBufferInputStream(input));
         }
         catch (IOException ioe) {
             System.err.println(ioe.getMessage());
+            return "{}"; // null result
         }
 
         LexerInterpreter lexEngine = (lg != null) ?
@@ -94,10 +101,6 @@ public class GrammarProcessor {
         parser.setProfile(true);
 
         Rule r = g.rules.get(startRule);
-        if (r == null) {
-            System.err.println("No such start rule: " + startRule);
-            return null;
-        }
         ParseTree t = parser.parse(r.index);
         ParseInfo parseInfo = parser.getParseInfo();
 

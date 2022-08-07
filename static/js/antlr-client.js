@@ -269,6 +269,14 @@ function showToolErrors(response) {
 }
 
 function showParseErrors(response) {
+    if ( !'lex_errors' in response.data.result ||
+         !'parse_errors' in response.data.result )
+    {
+        $("#parse_errors").hide();
+        $("#parse_errors_header").hide();
+        return;
+    }
+
     if (response.data.result.lex_errors.length > 0 ||
         response.data.result.parse_errors.length > 0 )
     {

@@ -269,8 +269,8 @@ function showToolErrors(response) {
 }
 
 function showParseErrors(response) {
-    if ( !'lex_errors' in response.data.result ||
-         !'parse_errors' in response.data.result )
+    if ( !('lex_errors' in response.data.result) ||
+         !('parse_errors' in response.data.result) )
     {
         $("#parse_errors").hide();
         $("#parse_errors_header").hide();

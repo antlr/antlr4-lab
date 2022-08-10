@@ -280,7 +280,7 @@ function createEditor(id){
         theme:'vs-dark',
         glyphMargin : false,
         fontSize: '12px',
-        columnSelection: true,
+        columnSelection: false,
         wordWrap: 'on',
         dragAndDrop: true,
         bracketPairColorization : {independentColorPoolPerBracketType:true, enabled:true},

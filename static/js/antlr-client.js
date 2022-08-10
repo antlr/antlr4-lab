@@ -46,8 +46,6 @@ function processANTLRResults(response) {
     );
     let newInput = chunks.join('');
 
-    $("#input").html(newInput);
-
     $('#input span').hover(function (event) {
         if ( !event.ctrlKey ) return;
         let oldStyle = $(this).css('text-decoration');

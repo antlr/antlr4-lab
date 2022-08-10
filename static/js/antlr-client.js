@@ -3,10 +3,10 @@
 let ANTLR_SERVICE = "http://lab.antlr.org/antlr/";
 // let ANTLR_SERVICE = "http://localhost/antlr/";
 
-function processANTLRResults(response) {
-    var g = $('#grammar').text();
-    var lg = $('#lexgrammar').text();
-    var I = $('#input').text();
+async function processANTLRResults(response) {
+    var g =  await getEditorContent('grammar');
+    var lg = await getEditorContent('lexgrammar');
+    var I = await getEditorContent('input');
     var s = $('#start').text();
     let result = response.data.result;
     console.log(result);
@@ -41,32 +41,12 @@ function processANTLRResults(response) {
     let profile = result.profile;
 
     let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
-    chunks = chunks.map(c =>
-         `<span ${'error' in c ? 'style="color:#E93A2B; text-decoration: underline dotted #E93A2B;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
-    );
-    let newInput = chunks.join('');
-
-    $("#input").html(newInput);
-
-    $('#input span').hover(function (event) {
-        if ( !event.ctrlKey ) return;
-        let oldStyle = $(this).css('text-decoration');
-        if ( $(this).css("cursor")!=="pointer" ) {
-            $(this).css('cursor','pointer');
+    let errorlist = $('#errors');
+    errorlist.html('');
+    chunks.forEach(c => {
+        if('error' in c) {
+            errorlist.append(`<li><strong>${c.chunktext}</strong>: ${c.tooltip}</li>`);
         }
-        $(this).data( "text-decoration", oldStyle ); // save
-        $(this)
-            .css('text-decoration', 'underline')
-            .css('font-weight', 'bold')
-            .css('text-decoration-color', 'darkgray').text();
-    }, function () {
-        let oldStyle = $(this).data( "text-decoration");
-        if ( $(this).css("cursor")==="pointer" ) {
-            $(this).css('cursor','auto');
-        }
-        $(this)
-            .css('text-decoration', oldStyle)
-            .css('font-weight', 'normal')
     });
 
     $('div span').tooltip({
@@ -128,9 +108,9 @@ function walk(t, result, input, buf) {
 }
 
 async function run_antlr() {
-    var g = $('#grammar').text();
-    var lg = $('#lexgrammar').text();
-    var I = $('#input').text();
+    var g =  await getEditorContent('grammar');
+    var lg = await getEditorContent('lexgrammar');
+    var I = await getEditorContent('input');
     var s = $('#start').text();
 
     $("#profile_choice").show();
@@ -298,6 +278,29 @@ function showParseErrors(response) {
     }
 }
 
+async function getEditorContent(id) {
+    let editors = await monaco.editor.getEditors();
+    let index = {'grammar': 0, 'lexgrammar': 1, 'input': 2};
+    return editors[index[id]].getValue();
+}
+
+function createEditor(id){
+    var content = $('#' + id).text();
+    $('#' + id).html('');
+    monaco.editor.create(document.getElementById(id),{
+        value: content,
+        lineNumbers: 'on',
+        theme:'vs-dark',
+        glyphMargin : false,
+        fontSize: '12px',
+        columnSelection: true,
+        wordWrap: 'on',
+        dragAndDrop: true,
+        bracketPairColorization : {independentColorPoolPerBracketType:true, enabled:true},
+        automaticLayout: true
+    });
+}
+
 // MAIN
 $(document).ready(function() {
     String.prototype.sliceReplace = function (start, end, repl) {
@@ -305,6 +308,12 @@ $(document).ready(function() {
     };
 
     $(document).tooltip();
+
+    monaco.languages.register({ id: 'bnf' });
+
+    createEditor('grammar');
+    createEditor('lexgrammar');
+    createEditor('input');
 
     $("#tree_header").hide();
     $("#profile_header").hide();

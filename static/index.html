@@ -12,10 +12,14 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
-    <style></style>
 
+    <script src="vs/loader.js"></script>
+    <script src="vs/editor/editor.main.js"></script>
+    <script src="vs/editor/editor.main.nls.js"></script>
+
+    <link rel="stylesheet" href="vs/editor/editor.main.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
     <script src="js/antlr-client.js"></script>
 </head>
 <body>
@@ -24,7 +28,7 @@
         <span id="parsertab" class="tab-header">Parser</span>&nbsp;
         <span id="lexertab" class="tab-header">Lexer</span>
     </div>
-    <div class='editor' id="grammar" contenteditable="true"  style="white-space: pre-wrap;">parser grammar ExprParser;
+    <div class='editor' id="grammar">parser grammar ExprParser;
 options { tokenVocab=ExprLexer; }
 
 program
@@ -47,8 +51,7 @@ expr: ID
     ;
 
 func : ID '(' expr (',' expr)* ')' ;
-</div>
-
+    </div>
     <div class='editor' id="lexgrammar" contenteditable="true"  style="white-space: pre-wrap;">
 lexer grammar ExprLexer;
 
@@ -75,7 +78,9 @@ WS: [ \t\n\r\f]+ -> skip ;
 <!--    </div>-->
     <br>
     <span class="chunk-header">Input</span>
-    <div class='editor' id="input" contenteditable="true"  style="min-height: 3em">xy = 3+foo;</div>
+    <div class='editor' id="input">xy = 3+foo;</div>
+
+    <ul id="errors"></ul>
 
     <br>
     <span class="chunk-header">Start rule</span><br>
@@ -117,4 +122,3 @@ WS: [ \t\n\r\f]+ -> skip ;
 
 </body>
 </html>
-

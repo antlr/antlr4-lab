@@ -1,15 +1,10 @@
 .editor {
     border: solid .5px #7F7F7F;
-    font-family: 'Inconsolata', 'Menlo', monospace;
-    font-size: 12px;
-    color: #404040;
-    padding: 3px;
-    white-space: pre-wrap;
-    overflow: auto;
-    min-height: 10em;
-    max-height: 20em;
+    height: 400px
 }
-
+.editor#input {
+    height: 100px
+}
 .editor:focus {
     outline: none;
 }

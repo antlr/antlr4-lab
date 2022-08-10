@@ -49,19 +49,6 @@ async function processANTLRResults(response) {
         }
     });
 
-    $('div span').tooltip({
-        show: {duration: 0}, hide: {duration: 0}, tooltipClass: "mytooltip"
-    });
-
-    // $(document).tooltip("disable").tooltip("hide");
-    $(document).keydown(
-        e => e.ctrlKey ? $(document).tooltip("enable") : null
-    );
-    $(document).keyup(
-        e => $(document).tooltip("disable")
-    );
-    $(document).tooltip("disable");
-
     let tree = result.tree;
     let buf = ['<ul id="treeUL">'];
     walk(tree, result, I, buf);

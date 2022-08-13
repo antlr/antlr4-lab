@@ -219,7 +219,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
     while ( i<input.length ) {
         if ( charToChunk[i]==null ) {
             let a = i;
-            while ( charToChunk[i]==null ) {
+            while ( charToChunk[i]==null && i<input.length ) {
                 i++;
             }
             let b = i;

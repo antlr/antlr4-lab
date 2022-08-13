@@ -1,13 +1,13 @@
 "use strict";
 
-let ANTLR_SERVICE = "http://lab.antlr.org/parse/";
-// let ANTLR_SERVICE = "http://localhost/parse/";
+// let ANTLR_SERVICE = "http://lab.antlr.org/parse/";
+let ANTLR_SERVICE = "http://localhost/parse/";
 
 function processANTLRResults(response) {
-    var g = $('#grammar').text();
-    var lg = $('#lexgrammar').text();
-    var I = $('#input').text();
-    var s = $('#start').text();
+    let g = $('#grammar').text();
+    let lg = $('#lexgrammar').text();
+    let I = $('#input')[0].innerText; // do this to preserve newlines
+    let s = $('#start').text();
     let result = response.data.result;
     console.log(result);
 
@@ -128,10 +128,10 @@ function walk(t, result, input, buf) {
 }
 
 async function run_antlr() {
-    var g = $('#grammar').text();
-    var lg = $('#lexgrammar').text();
-    var I = $('#input').text();
-    var s = $('#start').text();
+    let g = $('#grammar').text();
+    let lg = $('#lexgrammar').text();
+    let I = $('#input')[0].innerText; // do this to preserve newlines
+    let s = $('#start').text();
 
     $("#profile_choice").show();
 

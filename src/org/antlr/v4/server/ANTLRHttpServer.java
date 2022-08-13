@@ -2,7 +2,6 @@ package org.antlr.v4.server;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -22,7 +21,8 @@ import static org.antlr.v4.server.GrammarProcessor.interp;
 public class ANTLRHttpServer {
 
 	public static class ParseServlet extends DefaultServlet {
-		static final ch.qos.logback.classic.Logger LOGGER = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(ANTLRHttpServer.class);
+		static final ch.qos.logback.classic.Logger LOGGER =
+				(ch.qos.logback.classic.Logger)LoggerFactory.getLogger(ANTLRHttpServer.class);
 
 		@Override
 		public void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -112,7 +112,7 @@ public class ANTLRHttpServer {
 
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath("/");
-		context.addServlet(new ServletHolder(new ParseServlet()), "/antlr/*");
+		context.addServlet(new ServletHolder(new ParseServlet()), "/parse/*");
 
 		ServletHolder holderHome = new ServletHolder("static-home", DefaultServlet.class);
 		holderHome.setInitParameter("resourceBase", "static");
@@ -120,12 +120,6 @@ public class ANTLRHttpServer {
 		holderHome.setInitParameter("pathInfoOnly","true");
 		context.addServlet(holderHome,"/*");
 
-//		ServletHolder testHome = new ServletHolder("static", DefaultServlet.class);
-//		testHome.setInitParameter("resourceBase", "test");
-//		testHome.setInitParameter("dirAllowed","true");
-//		testHome.setInitParameter("pathInfoOnly","true");
-//		context.addServlet(testHome,"/test/*");
-//
 		server.setHandler(context);
 
 		server.start();

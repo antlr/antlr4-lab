@@ -1,7 +1,7 @@
 "use strict";
 
-let ANTLR_SERVICE = "http://lab.antlr.org/antlr/";
-// let ANTLR_SERVICE = "http://localhost/antlr/";
+let ANTLR_SERVICE = "http://lab.antlr.org/parse/";
+// let ANTLR_SERVICE = "http://localhost/parse/";
 
 function processANTLRResults(response) {
     var g = $('#grammar').text();

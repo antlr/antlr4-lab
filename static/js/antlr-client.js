@@ -9,6 +9,17 @@ function processANTLRResults(response) {
     let lg = $('#lexgrammar').text();
     let I = $('#input')[0].innerText; // do this to preserve newlines
     let s = $('#start').text();
+
+    if ( typeof(response.data)==="string" ) {
+        // Didn't parse as json
+        console.log("Bad JSON:")
+        console.log(response.data);
+        $("#tool_errors").html(`<span class="error">BAD JSON RESPONSE</span><br>`);
+        $("#tool_errors").show();
+        $("#tool_errors_header").show();
+        return;
+    }
+
     let result = response.data.result;
     console.log(result);
 
@@ -83,11 +94,14 @@ function processANTLRResults(response) {
     );
     $(document).tooltip("disable");
 
+    let svgtree = result.svgtree;
     let tree = result.tree;
     let buf = ['<ul id="treeUL">'];
     walk(tree, result, I, buf);
     buf.push('</ul>');
     console.log(buf.join('\n'));
+    $("#svgtree").html("<iframe style='border: none; overflow: auto; min-height: 15em; width: 100%' srcdoc='"+svgtree+"'></iframe>");
+    // $("#svgtree").html("<iframe srcdoc='"+svgtree+"'></iframe>");
     $("#tree").html(buf.join('\n'))
 
     initParseTreeView();
@@ -148,7 +162,10 @@ async function run_antlr() {
 }
 
 function initParseTreeView() {
-    $("#tree_header").show();
+    $("#svgtreetab").show();
+    $("#treetab").show();
+    // $("#svgtree_header").show();
+    // $("#tree_header").show();
     let toggler = document.getElementsByClassName("tree-root");
     for (let i = 0; i < toggler.length; i++) {
 	// add event handler to open/close
@@ -299,6 +316,50 @@ function showParseErrors(response) {
     }
 }
 
+function setupGrammarTabs() {
+    $("#grammar").show();
+    $("#lexgrammar").hide();
+    $("#parsertab").addClass("tabs-header-selected");
+    $("#lexertab").removeClass("tabs-header-selected");
+
+    $("#parsertab").click(function () {
+        $("#grammar").show();
+        $("#lexgrammar").hide();
+        $("#parsertab").addClass("tabs-header-selected");
+        $("#lexertab").removeClass("tabs-header-selected");
+    });
+    $("#lexertab").click(function () {
+        $("#grammar").hide();
+        $("#lexgrammar").show();
+        $("#parsertab").removeClass("tabs-header-selected");
+        $("#lexertab").addClass("tabs-header-selected");
+    });
+}
+
+function setupTreeTabs() {
+    // $("#svgtree_header").hide();
+    // $("#tree_header").hide();
+    $("#svgtreetab").hide();
+    $("#treetab").hide();
+    $("#svgtreetab").addClass("tabs-header-selected");
+    $("#treetab").removeClass("tabs-header-selected");
+    $("#svgtree").show();
+    $("#tree").hide();
+
+    $("#svgtreetab").click(function () {
+        $("#svgtree").show();
+        $("#tree").hide();
+        $("#svgtreetab").addClass("tabs-header-selected");
+        $("#treetab").removeClass("tabs-header-selected");
+    });
+    $("#treetab").click(function () {
+        $("#svgtree").hide();
+        $("#tree").show();
+        $("#svgtreetab").removeClass("tabs-header-selected");
+        $("#treetab").addClass("tabs-header-selected");
+    });
+}
+
 // MAIN
 $(document).ready(function() {
     String.prototype.sliceReplace = function (start, end, repl) {
@@ -307,26 +368,9 @@ $(document).ready(function() {
 
     $(document).tooltip();
 
-    $("#tree_header").hide();
-    $("#profile_header").hide();
+    setupGrammarTabs();
 
-    $("#grammar").show();
-    $("#lexgrammar").hide();
-    $("#parsertab").addClass("tabs-header-selected");
-    $("#lexertab").removeClass("tabs-header-selected");
-
-    $( "#parsertab" ).click(function() {
-        $("#grammar").show();
-        $("#lexgrammar").hide();
-        $("#parsertab").addClass("tabs-header-selected");
-        $("#lexertab").removeClass("tabs-header-selected");
-    });
-    $( "#lexertab" ).click(function() {
-        $("#grammar").hide();
-        $("#lexgrammar").show();
-        $("#parsertab").removeClass("tabs-header-selected");
-        $("#lexertab").addClass("tabs-header-selected");
-    });
+    setupTreeTabs();
 
     $("#profile_choice").hide();
     $("#profile_header").hide();

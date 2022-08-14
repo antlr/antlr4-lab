@@ -13,7 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
-    <style></style>
 
     <link rel="stylesheet" href="css/style.css">
     <script src="js/antlr-client.js"></script>
@@ -88,15 +87,31 @@ WS: [ \t\n\r\f]+ -> skip ;
     <button type="button" class="run-button" onclick="run_antlr()">Run</button>
     <button id="profile_choice" type="button" class="profile-button">Show profiler</button><br>
 
-    <!--    <br>-->
-<!--    <div class="tabs-header">-->
-<!--        <span id="consoles_tab" class="tab-header">Console</span>&nbsp;-->
-<!--        <span id="tree_tab" class="tab-header">Parse tree</span>-->
-<!--        <span id="profile_tab" class="tab-header">Profiles</span>-->
-<!--    </div>-->
-
     <br>
-    <span id="tree_header" class="chunk-header">Parse tree</span>
+    <div class="tabs-header">
+        <span id="svgtreetab" class="tab-header">Tree</span>&nbsp;
+        <span id="treetab" class="tab-header">Hierarchy</span>
+    </div>
+
+<!--    <table border="0" width="100%">-->
+<!--        <tr>-->
+<!--            <th width="50%">-->
+<!--            </th>-->
+<!--            <th width="50%" align="left">-->
+<!--                <span id="tree_header" class="chunk-header">Parse Hierarchy</span>-->
+<!--            </th>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td width="50%">-->
+<!--                <div id="svgtree"></div>-->
+<!--            </td>-->
+<!--            <td width="50%">-->
+<!--                <div id="tree"></div>-->
+<!--            </td>-->
+<!--        </tr>-->
+<!--    </table>-->
+
+    <div id="svgtree"></div>
     <div id="tree"></div>
 
     <span id="profile_header" class="chunk-header"><br>Parser profile info</span>

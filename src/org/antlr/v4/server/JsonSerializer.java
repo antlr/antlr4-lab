@@ -1,20 +1,29 @@
 package org.antlr.v4.server;
 
 import org.antlr.v4.gui.Interpreter;
+import org.antlr.v4.gui.Trees;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.misc.Triple;
 import org.antlr.v4.runtime.misc.Utils;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.tool.ANTLRMessage;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
+import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
+import static org.antlr.v4.server.GrammarProcessor.toSVG;
+import static us.parr.lib.ParrtSys.execInDir;
 
 // TODO: Ultimately this will go into the ANTLR core and then we can remove this class
 
@@ -98,7 +107,7 @@ public class JsonSerializer {
      * @param recog The parser that created the parse tree and is in the post-recognition state
      * @return JSON representing the parse tree
      */
-    public static String toJSON(Tree t, Parser recog) {
+    public static String toJSON(Tree t, Parser recog) throws IOException {
         String[] ruleNames = recog != null ? recog.getRuleNames() : null;
         if ( t==null || ruleNames==null ) {
             return null;
@@ -121,6 +130,7 @@ public class JsonSerializer {
                                 List<String> lexMsgs,
                                 List<String> parseMsgs,
                                 String[][] profileData)
+        throws IOException
     {
         if ( t==null || ruleNames==null ) {
             return null;
@@ -165,6 +175,11 @@ public class JsonSerializer {
             buf.append("],");
         }
 
+        String svg = toSVG(t, ruleNames);
+        buf.append("\"svgtree\":\"");
+        buf.append(escapeJSONString(svg));
+        buf.append("\",");
+
         String tree = toJSONTree(t);
         buf.append("\"tree\":");
         buf.append(tree);
@@ -190,18 +205,6 @@ public class JsonSerializer {
             buf.append("\"]");
         }
 
-//        for (int i = 0; i < profileData.length; i++) {
-//            String[] row = profileData[i];
-//            // program:0,1,0.167833
-//            String ruleName = row[0];
-//            if ( i>0 ) buf.append(',');
-//            buf.append(String.format("\"%s\":[", ruleName));
-//            for (int j = 1; j < row.length; j++) {
-//                if ( j>1 ) buf.append(',');
-//                buf.append(row[j]);
-//            }
-//            buf.append("]");
-//        }
         buf.append("]}");
 
         buf.append("}");

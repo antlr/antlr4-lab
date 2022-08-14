@@ -19,6 +19,7 @@ import java.io.*;
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
 public class ANTLRHttpServer {
+	public static final String IMAGES_DIR = "/tmp/antlr-images";
 
 	public static class ParseServlet extends DefaultServlet {
 		static final ch.qos.logback.classic.Logger LOGGER =
@@ -97,6 +98,8 @@ public class ANTLRHttpServer {
 	}
 
 	public static void main(String[] args) throws Exception {
+		new File(IMAGES_DIR).mkdirs();
+
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxThreads(10);
 		threadPool.setName("server");

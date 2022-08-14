@@ -3,14 +3,21 @@ package org.antlr.v4.server;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.v4.Tool;
 import org.antlr.v4.gui.Interpreter;
+import org.antlr.v4.gui.Trees;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.DecisionInfo;
 import org.antlr.v4.runtime.atn.ParseInfo;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.tool.*;
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
+import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
+import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +26,9 @@ public class GrammarProcessor {
     /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
      *  with errors, tokens, rule names, and the parse tree.
      */
-    public static String interp(String grammar, String lexGrammar, String input, String startRule) {
+    public static String interp(String grammar, String lexGrammar, String input, String startRule)
+        throws IOException
+    {
         startRule = startRule.strip();
         Grammar g = null;
         LexerGrammar lg = null;
@@ -72,15 +81,10 @@ public class GrammarProcessor {
         return result;
     }
 
-    private static String parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input) {
-        CharStream charStream = null;
-        try {
-            charStream = CharStreams.fromStream(new StringBufferInputStream(input));
-        }
-        catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
-            return "{}"; // null result
-        }
+    private static String parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input)
+        throws IOException
+    {
+        CharStream charStream = CharStreams.fromStream(new StringBufferInputStream(input));
 
         LexerInterpreter lexEngine = (lg != null) ?
                 lg.createLexerInterpreter(charStream) :
@@ -142,5 +146,27 @@ public class GrammarProcessor {
         }
 
         return table;
+    }
+
+    public static String toSVG(Tree t, List<String> ruleNames) throws IOException {
+        Trees.writePS(t, ruleNames, Path.of(IMAGES_DIR, "temp.ps").toAbsolutePath().toString());
+        String[] results = execInDir(IMAGES_DIR, "ps2pdf", "temp.ps", "temp.pdf");
+        if (results[1].length() > 0) {
+            System.err.println(results[1]);
+        }
+
+        results = execInDir(IMAGES_DIR, "pdfcrop", "--hires", "temp.pdf"); // creates temp-crop.pdf
+        if (results[1].length() > 0) {
+            System.err.println(results[1]);
+        }
+
+        results = execInDir(IMAGES_DIR, "pdf2svg", "temp-crop.pdf", "temp.svg");
+        if (results[1].length() > 0) {
+            System.err.println(results[1]);
+        }
+
+        String svgfilename = Path.of(IMAGES_DIR, "temp.svg").toAbsolutePath().toString();
+        String svg = new String(Files.readAllBytes(Paths.get(svgfilename)));
+        return svg;
     }
 }

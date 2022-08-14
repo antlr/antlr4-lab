@@ -88,16 +88,24 @@ WS: [ \t\n\r\f]+ -> skip ;
     <button type="button" class="run-button" onclick="run_antlr()">Run</button>
     <button id="profile_choice" type="button" class="profile-button">Show profiler</button><br>
 
-    <!--    <br>-->
-<!--    <div class="tabs-header">-->
-<!--        <span id="consoles_tab" class="tab-header">Console</span>&nbsp;-->
-<!--        <span id="tree_tab" class="tab-header">Parse tree</span>-->
-<!--        <span id="profile_tab" class="tab-header">Profiles</span>-->
-<!--    </div>-->
-
     <br>
-    <span id="tree_header" class="chunk-header">Parse tree</span>
-    <div id="tree"></div>
+    <table border="0" width="100%">
+        <tr>
+            <th width="50%">
+            </th>
+            <th width="50%" align="left">
+                <span id="tree_header" class="chunk-header">Parse Hierarchy</span>
+            </th>
+        </tr>
+        <tr>
+            <td width="50%">
+                <div id="svgtree"></div>
+            </td>
+            <td width="50%">
+                <div id="tree"></div>
+            </td>
+        </tr>
+    </table>
 
     <span id="profile_header" class="chunk-header"><br>Parser profile info</span>
     <div id="profile"></div>

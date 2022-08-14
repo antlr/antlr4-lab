@@ -87,6 +87,9 @@ ul, #treeUL {
 #treeUL {
     margin: 0;
     padding: 0;
+    overflow: auto;
+    max-height: 15em;
+    border: solid .5px #7F7F7F;
 }
 
 .tree-root {

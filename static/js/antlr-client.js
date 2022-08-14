@@ -9,6 +9,17 @@ function processANTLRResults(response) {
     let lg = $('#lexgrammar').text();
     let I = $('#input')[0].innerText; // do this to preserve newlines
     let s = $('#start').text();
+
+    if ( typeof(response.data)==="string" ) {
+        // Didn't parse as json
+        console.log("Bad JSON:")
+        console.log(response.data);
+        $("#tool_errors").html(`<span class="error">BAD JSON RESPONSE</span><br>`);
+        $("#tool_errors").show();
+        $("#tool_errors_header").show();
+        return;
+    }
+
     let result = response.data.result;
     console.log(result);
 
@@ -83,11 +94,14 @@ function processANTLRResults(response) {
     );
     $(document).tooltip("disable");
 
+    let svgtree = result.svgtree;
     let tree = result.tree;
     let buf = ['<ul id="treeUL">'];
     walk(tree, result, I, buf);
     buf.push('</ul>');
     console.log(buf.join('\n'));
+    // $("#svgtree").html('<img alt="parse tree" src=""/>')
+    $("#svgtree").html("<iframe style='min-height: 15em; max-height: 15em' width='100%' height='100%' srcdoc='"+svgtree+"'></iframe>");
     $("#tree").html(buf.join('\n'))
 
     initParseTreeView();
@@ -148,6 +162,7 @@ async function run_antlr() {
 }
 
 function initParseTreeView() {
+    $("#svgtree_header").show();
     $("#tree_header").show();
     let toggler = document.getElementsByClassName("tree-root");
     for (let i = 0; i < toggler.length; i++) {
@@ -307,6 +322,7 @@ $(document).ready(function() {
 
     $(document).tooltip();
 
+    $("#svgtree_header").hide();
     $("#tree_header").hide();
     $("#profile_header").hide();
 

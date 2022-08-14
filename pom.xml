@@ -87,7 +87,12 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.6</version>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>us.parr</groupId>
+			<artifactId>parrtlib</artifactId>
+			<version>0.5-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>

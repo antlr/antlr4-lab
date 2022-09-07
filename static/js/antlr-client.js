@@ -4,9 +4,53 @@ let ANTLR_SERVICE = "/parse/";
 // let ANTLR_SERVICE = "http://lab.antlr.org/parse/";
 // let ANTLR_SERVICE = "http://localhost/parse/";
 
+let SAMPLE_PARSER = "parser grammar ExprParser;\n" +
+    "options { tokenVocab=ExprLexer; }\n" +
+    "\n" +
+    "program\n" +
+    "    : stat EOF\n" +
+    "    | def EOF\n" +
+    "    ;\n" +
+    "\n" +
+    "stat: ID '=' expr ';'\n" +
+    "    | expr ';'\n" +
+    "    ;\n" +
+    "\n" +
+    "def : ID '(' ID (',' ID)* ')' '{' stat* '}' ;\n" +
+    "\n" +
+    "expr: ID\n" +
+    "    | INT\n" +
+    "    | func\n" +
+    "    | 'not' expr\n" +
+    "    | expr 'and' expr\n" +
+    "    | expr 'or' expr\n" +
+    "    ;\n" +
+    "\n" +
+    "func : ID '(' expr (',' expr)* ')' ;"
+
+let SAMPLE_LEXER = "lexer grammar ExprLexer;\n" +
+    "\n" +
+    "AND : 'and' ;\n" +
+    "OR : 'or' ;\n" +
+    "NOT : 'not' ;\n" +
+    "EQ : '=' ;\n" +
+    "COMMA : ',' ;\n" +
+    "SEMI : ';' ;\n" +
+    "LPAREN : '(' ;\n" +
+    "RPAREN : ')' ;\n" +
+    "LCURLY : '{' ;\n" +
+    "RCURLY : '}' ;\n" +
+    "\n" +
+    "INT : [0-9]+ ;\n" +
+    "ID: [a-zA-Z_][a-zA-Z_0-9]* ;\n" +
+    "WS: [ \\t\\n\\r\\f]+ -> skip ;";
+
+
 function processANTLRResults(response) {
-    let g = $('#grammar').text();
-    let lg = $('#lexgrammar').text();
+    let parserSession = $("#grammar").data("parserSession")
+    let lexerSession = $("#grammar").data("lexerSession")
+    let g = parserSession.getValue()
+    let lg = lexerSession.getValue();
     let I = $('#input')[0].innerText; // do this to preserve newlines
     let s = $('#start').text();
 
@@ -143,8 +187,10 @@ function walk(t, result, input, buf) {
 }
 
 async function run_antlr() {
-    let g = $('#grammar').text();
-    let lg = $('#lexgrammar').text();
+    let parserSession = $("#grammar").data("parserSession")
+    let lexerSession = $("#grammar").data("lexerSession")
+    let g = parserSession.getValue()
+    let lg = lexerSession.getValue();
     let I = $('#input')[0].innerText; // do this to preserve newlines
     let s = $('#start').text();
 
@@ -317,20 +363,28 @@ function showParseErrors(response) {
 }
 
 function setupGrammarTabs() {
-    $("#grammar").show();
-    $("#lexgrammar").hide();
+    var parserSession = ace.createEditSession(SAMPLE_PARSER);
+    var lexerSession = ace.createEditSession(SAMPLE_LEXER);
+
+
+    var editor = ace.edit("grammar");
+    editor.setSession(parserSession);
+    // $("#grammar").resize()
+
+    $("#grammar").data("parserSession", parserSession);
+    $("#grammar").data("lexerSession", lexerSession);
+
+
     $("#parsertab").addClass("tabs-header-selected");
     $("#lexertab").removeClass("tabs-header-selected");
 
     $("#parsertab").click(function () {
-        $("#grammar").show();
-        $("#lexgrammar").hide();
+        editor.setSession(parserSession);
         $("#parsertab").addClass("tabs-header-selected");
         $("#lexertab").removeClass("tabs-header-selected");
     });
     $("#lexertab").click(function () {
-        $("#grammar").hide();
-        $("#lexgrammar").show();
+        editor.setSession(lexerSession);
         $("#parsertab").removeClass("tabs-header-selected");
         $("#lexertab").addClass("tabs-header-selected");
     });

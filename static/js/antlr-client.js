@@ -369,6 +369,12 @@ function setupGrammarTabs() {
 
     var editor = ace.edit("grammar");
     editor.setSession(parserSession);
+    editor.setOptions({
+        "highlightActiveLine":false,
+        "readOnly":false,
+        "showLineNumbers":true,
+        "showGutter":true
+    });
     // $("#grammar").resize()
 
     $("#grammar").data("parserSession", parserSession);

@@ -20,33 +20,63 @@
 </head>
 <body>
 
-    <div class="tabs-header">
-        <span id="lexertab" class="tab-header">Lexer</span>
-        <span id="parsertab" class="tab-header">Parser</span>&nbsp;
+<div class="main-layout">
+
+    <!-- GRAMMAR(S) -->
+
+    <div style="flex-grow: 1;"> <!-- LEFT PANE -->
+        <div class="tabs-header">
+            <span id="lexertab" class="tab-header">Lexer</span>
+            <span id="parsertab" class="tab-header">Parser</span>&nbsp;
+        </div>
+
+        <div id="grammar"></div>
     </div>
 
-    <div id="grammar"></div>
+    <!-- INPUT -->
+    &nbsp;&nbsp;
 
-<br>
-<span class="chunk-header">Input</span> &nbsp;&nbsp;(<i style="font-family: 'Arial', sans-serif;
+    <div style="flex-grow: 1;"> <!-- RIGHT PANE -->
+        <span class="chunk-header">Input</span> &nbsp;&nbsp;(<i style="font-family: 'Arial', sans-serif;
     font-size: 12px;">After running, ctrl-mouse over input for tokenization</i>)
-<div class='editor' id="input" contenteditable="true"  style="min-height: 3em">f(x,y) {
-  a = 3+foo;
-  x and y;
-}
+        <div class='editor' id="input" contenteditable="true" style="min-height: 3em">f(x,y) {
+    a = 3+foo;
+    x and y;
+}</div>
+
+        <!-- RUN BUTTON -->
+
+        <br>
+        <span class="chunk-header">Start rule</span><br>
+        <span class='editor' id="start" contenteditable="true" style="min-height: 1em; min-width: 10em; max-width: 20em">program</span>
+        <button type="button" class="run-button" onclick="run_antlr()">Run</button>
+        <button id="profile_choice" type="button" class="profile-button">Show profiler</button><br>
+
+        <!-- CONSOLES -->
+
+        <br>
+        <span id="tool_errors_header" class="chunk-header">Tool console</span>
+        <div id="tool_errors" class="console"></div>
+        <span id="parse_errors_header" class="chunk-header">Parser console</span>
+        <div id="parse_errors" class="console"></div>
+
+        <!-- SHOW TREE -->
+
+        <br>
+        <div>
+            <div class="tabs-header">
+                <span id="svgtreetab" class="tab-header">Tree</span>&nbsp;
+                <span id="treetab" class="tab-header">Hierarchy</span>
+            </div>
+        </div>
+        <div id="svgtree"></div>
+        <div id="tree"></div>
+    </div>
+
 </div>
 
-    <br>
-    <span class="chunk-header">Start rule</span><br>
-    <span class='editor' id="start" contenteditable="true" style="min-height: 1em; min-width: 10em; max-width: 20em">program</span>
-    <button type="button" class="run-button" onclick="run_antlr()">Run</button>
-    <button id="profile_choice" type="button" class="profile-button">Show profiler</button><br>
 
     <br>
-    <div class="tabs-header">
-        <span id="svgtreetab" class="tab-header">Tree</span>&nbsp;
-        <span id="treetab" class="tab-header">Hierarchy</span>
-    </div>
 
 <!--    <table border="0" width="100%">-->
 <!--        <tr>-->
@@ -66,16 +96,8 @@
 <!--        </tr>-->
 <!--    </table>-->
 
-    <div id="svgtree"></div>
-    <div id="tree"></div>
-
     <span id="profile_header" class="chunk-header"><br>Parser profile info</span>
     <div id="profile"></div>
-    <br>
-    <span id="tool_errors_header" class="chunk-header">Tool console</span>
-    <div id="tool_errors" class="console"></div>
-    <span id="parse_errors_header" class="chunk-header">Parser console</span>
-    <div id="parse_errors" class="console"></div>
 
     <script>
             let toggler = document.getElementsByClassName("box");

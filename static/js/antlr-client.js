@@ -362,20 +362,126 @@ function showParseErrors(response) {
     }
 }
 
-function setupGrammarTabs() {
-    var parserSession = ace.createEditSession(SAMPLE_PARSER);
-    var lexerSession = ace.createEditSession(SAMPLE_LEXER);
+function createAceANTLRMode() {
+    ace.define('ace/mode/my-mode',["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules", "ace/worker/worker_client" ], function(require, exports, module) {
+        var oop = require("ace/lib/oop");
+        var TextMode = require("ace/mode/text").Mode;
+        var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
 
+        var MyHighlightRules = function() {
+            var keywordMapper = this.createKeywordMapper({
+                "keyword.control": "if|then|else",
+                "keyword.operator": "and|or|not",
+                "keyword.other": "class",
+                "storage.type": "int|float|text",
+                "storage.modifier": "private|public",
+                "support.function": "print|sort",
+                "constant.language": "true|false"
+            }, "identifier");
+            this.$rules = {
+                "start": [
+                    { token : "comment", regex : "//.*$" },
+                    { token : "string",  regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]' },
+                    { token : "constant.numeric", regex : "0[xX][0-9a-fA-F]+\\b" },
+                    { token : "constant.numeric", regex: "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b" },
+                    { token : "keyword.operator", regex : "!|%|\\\\|/|\\*|\\-|\\+|~=|==|<>|!=|<=|>=|=|<|>|&&|\\|\\|" },
+                    { token : "punctuation.operator", regex : "\\?|\\:|\\,|\\;|\\." },
+                    { token : "paren.lparen", regex : "[[({]" },
+                    { token : "paren.rparen", regex : "[\\])}]" },
+                    { token : "text", regex : "\\s+" },
+                    { token: keywordMapper, regex: "[a-zA-Z_$][a-zA-Z0-9_$]*\\b" }
+                ]
+            };
+        };
+        oop.inherits(MyHighlightRules, TextHighlightRules);
 
+        var MyMode = function() {
+            this.HighlightRules = MyHighlightRules;
+        };
+        oop.inherits(MyMode, TextMode);
+
+        (function() {
+
+            this.$id = "ace/mode/my-mode";
+
+        }).call(MyMode.prototype);
+
+        exports.Mode = MyMode;
+    });
+}
+
+function createdAceEditor(parserSession) {
     var editor = ace.edit("grammar");
     editor.setSession(parserSession);
     editor.setOptions({
-        "highlightActiveLine":false,
-        "readOnly":false,
-        "showLineNumbers":true,
-        "showGutter":true
+        "highlightActiveLine": false,
+        "readOnly": false,
+        "showLineNumbers": true,
+        "showGutter": true
     });
     // $("#grammar").resize()
+
+    // ace.define('ace/mode/my-mode',
+    //     ["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules",
+    //                  "ace/worker/worker_client" ],
+    //     function(require, exports, module) {
+    //     var oop = require("ace/lib/oop");
+    //     var TextMode = require("ace/mode/text").Mode;
+    //     var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
+    //     var DocCommentHighlightRules = require("ace/mode/doc_comment_highlight_rules").DocCommentHighlightRules;
+    //
+    //     var MyHighlightRules = function() {
+    //         var keywordMapper = this.createKeywordMapper({
+    //             "keyword.control": "grammar|parser|lexer|options|@parser::header|@header|returns|fragment",
+    //         }, "identifier");
+    //         this.$rules = {
+    //             "start": [
+    //                 { token : "comment.line", regex : "//.*$" },
+    //                 // { token : "comment.block", regex : "/\\*.*?\\*/" },
+    //                 // DocCommentHighlightRules.getStartRule("doc-start"),
+    //                 {
+    //                     token : "comment", // multi line comment
+    //                     regex : "\\/\\*",
+    //                     next : "comment"
+    //                 },
+    //                 { token : "string",  regex : '[\'](?:(?:\\\\.)|(?:[^"\\\\]))*?[\']' },
+    //                 { token : "punctuation.operator", regex : "\\?|\\:|\\||\\;" },
+    //                 { token : "paren.lparen", regex : "[[({]" },
+    //                 { token : "paren.rparen", regex : "[\\])}]" },
+    //                 { token : "text", regex : "\\s+" },
+    //                 { token: keywordMapper, regex: "[a-zA-Z_$][a-zA-Z0-9_$]*\\b" },
+    //                 { token: "variable", regex: "[a-zA-Z_$][a-zA-Z0-9_$]*\\b" }
+    //             ]
+    //         };
+    //         this.embedRules(DocCommentHighlightRules, "doc-",
+    //             [ DocCommentHighlightRules.getEndRule("start") ]);
+    //     };
+    //     oop.inherits(MyHighlightRules, TextHighlightRules);
+    //
+    //     var MyMode = function() {
+    //         this.HighlightRules = MyHighlightRules;
+    //     };
+    //     oop.inherits(MyMode, TextMode);
+    //
+    //     (function() {
+    //
+    //         this.$id = "ace/mode/my-mode";
+    //
+    //     }).call(MyMode.prototype);
+    //
+    //     exports.Mode = MyMode;
+    // });
+
+    createAceANTLRMode()
+    editor.getSession().setMode("ace/mode/my-mode");
+
+    return editor;
+}
+
+function setupGrammarTabs() {
+    var parserSession = ace.createEditSession(SAMPLE_PARSER);
+    var lexerSession = ace.createEditSession(SAMPLE_LEXER);
+    var editor = createdAceEditor(parserSession);
 
     $("#grammar").data("parserSession", parserSession);
     $("#grammar").data("lexerSession", lexerSession);

@@ -6,6 +6,9 @@ let ANTLR_SERVICE = "/parse/";
 
 let SAMPLE_PARSER = "// test comment\n" +
     "parser grammar ExprParser;\n" +
+    "/*\n" +
+    "slfkjalkdsfsdaf\n" +
+    "\n*/\n" +
     "options { tokenVocab=ExprLexer; }\n" +
     "\n" +
     "program\n" +
@@ -366,17 +369,30 @@ function showParseErrors(response) {
 
 function createAceANTLRMode() {
     var ANTLR4HighlightRules = function() {
-        var keywordMapper = this.createKeywordMapper({
-            "keyword.control": "grammar|options|header|parser|lexer|returns|fragment",
-        }, "identifier");
         this.$rules = {
             "start": [
-                { token : "string",  regex : '[\'](?:(?:\\\\.)|(?:\\\\u....)|(?:[^\'\\\\]))*?[\']' },
+                { token : "string.single",  regex : '[\'](?:(?:\\\\.)|(?:\\\\u....)|(?:[^\'\\\\]))*?[\']' },
                 { token : "comment.line", regex : "//.*$" },
-                { token: keywordMapper, regex: "[a-zA-Z][a-zA-Z0-9_]*" },
+                {
+                    token : "comment", // multi line comment
+                    regex : "\\/\\*",
+                    next : "comment"
+                },
+                { token: "keyword", regex: "grammar|options|header|parser|lexer|returns|fragment" },
+                { token: "entity.name.function", regex: "[a-z][a-zA-Z0-9_]*\\b" },
+                { token: "variable", regex: "[A-Z][a-zA-Z0-9_]*\\b" },  // tokens start with uppercase char
                 { token : "punctuation.operator", regex : "\\?|\\:|\\||\\;" },
                 { token : "paren.lparen", regex : "[[({]" },
                 { token : "paren.rparen", regex : "[\\])}]" },
+            ],
+            "comment" : [
+                {
+                    token : "comment", // closing comment
+                    regex : "\\*\\/",
+                    next : "start"
+                }, {
+                    defaultToken : "comment"
+                }
             ]
         };
     };
@@ -404,63 +420,13 @@ function createdAceEditor(parserSession) {
     var editor = ace.edit("grammar");
     editor.setSession(parserSession);
     editor.setOptions({
+        theme: 'ace/theme/chrome',
         "highlightActiveLine": false,
         "readOnly": false,
         "showLineNumbers": true,
         "showGutter": true
     });
     // $("#grammar").resize()
-
-    // ace.define('ace/mode/my-mode',
-    //     ["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules",
-    //                  "ace/worker/worker_client" ],
-    //     function(require, exports, module) {
-    //     var oop = require("ace/lib/oop");
-    //     var TextMode = require("ace/mode/text").Mode;
-    //     var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
-    //     var DocCommentHighlightRules = require("ace/mode/doc_comment_highlight_rules").DocCommentHighlightRules;
-    //
-    //     var MyHighlightRules = function() {
-    //         var keywordMapper = this.createKeywordMapper({
-    //             "keyword.control": "grammar|parser|lexer|options|@parser::header|@header|returns|fragment",
-    //         }, "identifier");
-    //         this.$rules = {
-    //             "start": [
-    //                 { token : "comment.line", regex : "//.*$" },
-    //                 // { token : "comment.block", regex : "/\\*.*?\\*/" },
-    //                 // DocCommentHighlightRules.getStartRule("doc-start"),
-    //                 {
-    //                     token : "comment", // multi line comment
-    //                     regex : "\\/\\*",
-    //                     next : "comment"
-    //                 },
-    //                 { token : "string",  regex : '[\'](?:(?:\\\\.)|(?:[^"\\\\]))*?[\']' },
-    //                 { token : "punctuation.operator", regex : "\\?|\\:|\\||\\;" },
-    //                 { token : "paren.lparen", regex : "[[({]" },
-    //                 { token : "paren.rparen", regex : "[\\])}]" },
-    //                 { token : "text", regex : "\\s+" },
-    //                 { token: keywordMapper, regex: "[a-zA-Z_$][a-zA-Z0-9_$]*\\b" },
-    //                 { token: "variable", regex: "[a-zA-Z_$][a-zA-Z0-9_$]*\\b" }
-    //             ]
-    //         };
-    //         this.embedRules(DocCommentHighlightRules, "doc-",
-    //             [ DocCommentHighlightRules.getEndRule("start") ]);
-    //     };
-    //     oop.inherits(MyHighlightRules, TextHighlightRules);
-    //
-    //     var MyMode = function() {
-    //         this.HighlightRules = MyHighlightRules;
-    //     };
-    //     oop.inherits(MyMode, TextMode);
-    //
-    //     (function() {
-    //
-    //         this.$id = "ace/mode/my-mode";
-    //
-    //     }).call(MyMode.prototype);
-    //
-    //     exports.Mode = MyMode;
-    // });
 
     createAceANTLRMode()
     editor.getSession().setMode("ace/mode/antlr4-mode");

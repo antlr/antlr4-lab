@@ -428,7 +428,9 @@ function createdAceEditor(parserSession) {
     // $("#grammar").resize()
 
     createAceANTLRMode()
-    editor.getSession().setMode("ace/mode/antlr4-mode");
+    $("#grammar").data("parserSession").setMode("ace/mode/antlr4-mode")
+    $("#grammar").data("lexerSession").setMode("ace/mode/antlr4-mode")
+
 
     return editor;
 }
@@ -436,11 +438,9 @@ function createdAceEditor(parserSession) {
 function setupGrammarTabs() {
     var parserSession = ace.createEditSession(SAMPLE_PARSER);
     var lexerSession = ace.createEditSession(SAMPLE_LEXER);
-    var editor = createdAceEditor(parserSession);
-
     $("#grammar").data("parserSession", parserSession);
     $("#grammar").data("lexerSession", lexerSession);
-
+    var editor = createdAceEditor(parserSession);
 
     $("#parsertab").addClass("tabs-header-selected");
     $("#lexertab").removeClass("tabs-header-selected");

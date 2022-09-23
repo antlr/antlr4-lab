@@ -4,11 +4,8 @@ let ANTLR_SERVICE = "/parse/";
 // let ANTLR_SERVICE = "http://lab.antlr.org/parse/";
 // let ANTLR_SERVICE = "http://localhost/parse/";
 
-let SAMPLE_PARSER = "// test comment\n" +
+let SAMPLE_PARSER =
     "parser grammar ExprParser;\n" +
-    "/*\n" +
-    "slfkjalkdsfsdaf\n" +
-    "\n*/\n" +
     "options { tokenVocab=ExprLexer; }\n" +
     "\n" +
     "program\n" +
@@ -33,7 +30,9 @@ let SAMPLE_PARSER = "// test comment\n" +
     "\n" +
     "func : ID '(' expr (',' expr)* ')' ;"
 
-let SAMPLE_LEXER = "lexer grammar ExprLexer;\n" +
+let SAMPLE_LEXER =
+    "// DELETE THIS CONTENT IF YOU PUT COMBINED GRAMMAR IN Parser TAB\n" +
+    "lexer grammar ExprLexer;\n" +
     "\n" +
     "AND : 'and' ;\n" +
     "OR : 'or' ;\n" +

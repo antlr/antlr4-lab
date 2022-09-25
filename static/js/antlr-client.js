@@ -61,7 +61,8 @@ function processANTLRResults(response) {
     let lexerSession = $("#grammar").data("lexerSession")
     let g = parserSession.getValue()
     let lg = lexerSession.getValue();
-    let I = $("#input").data("session").getValue();
+    let session = $("#input").data("session");
+    let I = session.getValue();
     let s = $('#start').text();
 
     if ( typeof(response.data)==="string" ) {
@@ -108,10 +109,28 @@ function processANTLRResults(response) {
 
     let charToChunk = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
     $("#input").data("charToChunk", charToChunk);
+
+    let Range = ace.require('ace/range').Range;
+    for (let ei in lex_errors) {
+        let e = lex_errors[ei];
+        let a = session.doc.indexToPosition(e.startidx);
+        let b = session.doc.indexToPosition(e.erridx+1);
+        let r = new Range(a.row, a.column, b.row, b.column);
+        session.addMarker(r, "lexical_error_class", "text");
+    }
+
+    // charToChunk.forEach((chunk) => {
+    //     if ( 'error' in chunk ) {
+    //         let a = input.session.doc.indexToPosition(chunk.start);
+    //         let b = input.session.doc.indexToPosition(chunk.stop);
+    //         let r = new Range(a.row, a.column, b.row, b.column);
+    //         $("#input").data("session").addMarker();
+    //     }
+    // });
+
     // charToChunk = charToChunk.map(c =>
     //      `<span ${'error' in c ? 'style="color:#E93A2B; text-decoration: underline dotted #E93A2B;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
     // );
-    let newInput = charToChunk.join('');
 
     /*
     $("#input").html(newInput);
@@ -461,6 +480,7 @@ function createInputEditor() {
     var input = ace.edit("input");
     let session = ace.createEditSession(SAMPLE_INPUT);
     $("#input").data("session", session);
+    $("#input").data("editor", input);
     input.setSession(session);
     input.setOptions({
         theme: 'ace/theme/chrome',
@@ -473,11 +493,12 @@ function createInputEditor() {
 
     input.on("blur", function(e) {
         console.log("BLUR");
+        $("#tokens").html("");
     });
 
     input.on("mousemove", function(e) {
         let pos = e.getDocumentPosition();
-        let ci = input.session.doc.positionToIndex(pos)
+        let ci = session.doc.positionToIndex(pos)
         let charToChunk = $("#input").data("charToChunk");
         if ( charToChunk!=null ) {
             if ( ci>=charToChunk.length ) {
@@ -487,10 +508,6 @@ function createInputEditor() {
             if ( chunk==null ) {
                 console.log("no chunk at ", ci)
             }
-            let a = input.session.doc.indexToPosition(chunk.start);
-            let b = input.session.doc.indexToPosition(chunk.stop);
-            let r = new Range(a.row, a.column, b.row, b.column);
-            console.log(r);
             console.log(pos, ci, chunk);
             $("#tokens").html(chunk.tooltip)
         }

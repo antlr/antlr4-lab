@@ -25,6 +25,11 @@
     min-height:300px;
 }
 
+.lexical_error_class {
+    position: absolute;
+    background-color: palevioletred;
+}
+
 /*
 .ace_editor {
     border: solid .5px #7F7F7F;

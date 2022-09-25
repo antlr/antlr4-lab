@@ -106,12 +106,14 @@ function processANTLRResults(response) {
 
     let profile = result.profile;
 
-    let chunks = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
-    chunks = chunks.map(c =>
-         `<span ${'error' in c ? 'style="color:#E93A2B; text-decoration: underline dotted #E93A2B;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
-    );
-    let newInput = chunks.join('');
+    let charToChunk = chunkifyInput(I, tokens, symbols, lex_errors, parse_errors);
+    $("#input").data("charToChunk", charToChunk);
+    // charToChunk = charToChunk.map(c =>
+    //      `<span ${'error' in c ? 'style="color:#E93A2B; text-decoration: underline dotted #E93A2B;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
+    // );
+    let newInput = charToChunk.join('');
 
+    /*
     $("#input").html(newInput);
 
     $('#input span').hover(function (event) {
@@ -147,6 +149,7 @@ function processANTLRResults(response) {
         e => $(document).tooltip("disable")
     );
     $(document).tooltip("disable");
+*/
 
     let svgtree = result.svgtree;
     let tree = result.tree;
@@ -264,7 +267,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
         let t = tokens[ti];
         let toktext = input.slice(t.start, t.stop + 1);
         let tooltipText = `#${ti} Type ${symbols[t.type]} Line ${t.line}:${t.pos}`;
-        let chunk = {tooltip:tooltipText, chunktext:toktext};
+        let chunk = {tooltip:tooltipText, chunktext:toktext, "start":t.start, "stop":t.stop+1};
         for (let i = t.start; i <= t.stop; i++) {
             charToChunk[i] = chunk;
         }
@@ -273,12 +276,13 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
         let e = lex_errors[ei];
         let errtext = input.slice(e.startidx, e.erridx + 1);
         let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
-        let chunk = {tooltip:tooltipText, chunktext:errtext, error:true};
+        let chunk = {tooltip:tooltipText, chunktext:errtext, "start":e.startidx, "stop":e.erridx+1, error:true};
         for (let i = e.startidx; i <= e.erridx; i++) {
             charToChunk[i] = chunk;
         }
     }
     // augment tooltip for any tokens covered by parse error range
+    /*
     for (let ei in parse_errors) {
         let e = parse_errors[ei];
         let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
@@ -287,6 +291,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
             charToChunk[i].error = true;
         }
     }
+*/
 
     // chunkify skipped chars (adjacent into one chunk)
     let i = 0;
@@ -298,7 +303,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
             }
             let b = i;
             let skippedText = input.slice(a, b);
-            let chunk = {tooltip:"Skipped", chunktext:skippedText};
+            let chunk = {tooltip:"Skipped", chunktext:skippedText, "start":a, "stop":b};
             for (let i = a; i < b; i++) {
                 charToChunk[i] = chunk;
             }
@@ -308,6 +313,9 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
         }
     }
 
+    return charToChunk;
+
+    /*
     // Walk input again to get unique chunks
     i = 0;
     let chunks = [];
@@ -322,6 +330,7 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
     }
     console.log(chunks);
     return chunks;
+     */
 }
 
 function showToolErrors(response) {
@@ -436,7 +445,8 @@ function createGrammarEditor() {
         "highlightActiveLine": false,
         "readOnly": false,
         "showLineNumbers": true,
-        "showGutter": true
+        "showGutter": true,
+        "printMargin": false
     });
     // $("#grammar").resize()
 
@@ -457,7 +467,36 @@ function createInputEditor() {
         "highlightActiveLine": false,
         "readOnly": false,
         "showLineNumbers": true,
-        "showGutter": false
+        "showGutter": false,
+        "printMargin": false
+    });
+
+    input.on("blur", function(e) {
+        console.log("BLUR");
+    });
+
+    input.on("mousemove", function(e) {
+        let pos = e.getDocumentPosition();
+        let ci = input.session.doc.positionToIndex(pos)
+        let charToChunk = $("#input").data("charToChunk");
+        if ( charToChunk!=null ) {
+            if ( ci>=charToChunk.length ) {
+                ci = charToChunk.length-1;
+            }
+            let chunk = charToChunk[ci];
+            if ( chunk==null ) {
+                console.log("no chunk at ", ci)
+            }
+            let a = input.session.doc.indexToPosition(chunk.start);
+            let b = input.session.doc.indexToPosition(chunk.stop);
+            let r = new Range(a.row, a.column, b.row, b.column);
+            console.log(r);
+            console.log(pos, ci, chunk);
+            $("#tokens").html(chunk.tooltip)
+        }
+        else {
+            console.log(pos, ci);
+        }
     });
 }
 

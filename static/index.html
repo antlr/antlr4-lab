@@ -30,21 +30,15 @@
             <span id="parsertab" class="tab-header">Parser</span>&nbsp;
         </div>
 
-        <div id="grammar"></div>
+        <div id="grammar" style="border: grey .5px solid;"></div>
     </div>
 
     <!-- INPUT -->
     &nbsp;&nbsp;
 
     <div style="flex-grow: 1;"> <!-- RIGHT PANE -->
-        <span class="chunk-header">Input</span> &nbsp;&nbsp;(<i style="font-family: 'Arial', sans-serif;
-    font-size: 12px;">After running, ctrl-mouse over input for tokenization</i>)
-<!--        <div class='editor' id="input" contenteditable="true" style="min-height: 3em">f(x,y) {-->
-<!--    a = 3+foo;-->
-<!--    x and y;-->
-<!--}</div>-->
-
-        <div id="input" style="min-height: 3em; max-height:100px;"></div>
+        <div class="chunk-header">Input&nbsp;&nbsp;<span id="tokens"></span></div>
+        <div id="input" style="border: grey .5px solid; min-height: 3em; max-height:100px;"></div>
 
         <!-- RUN BUTTON -->
 

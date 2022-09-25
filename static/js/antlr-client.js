@@ -49,13 +49,19 @@ let SAMPLE_LEXER =
     "ID: [a-zA-Z_][a-zA-Z_0-9]* ;\n" +
     "WS: [ \\t\\n\\r\\f]+ -> skip ;";
 
+let SAMPLE_INPUT =
+    "f(x,y) {\n" +
+    "    a = 3+foo;\n" +
+    "    x and y;\n" +
+    "}";
+
 
 function processANTLRResults(response) {
     let parserSession = $("#grammar").data("parserSession")
     let lexerSession = $("#grammar").data("lexerSession")
     let g = parserSession.getValue()
     let lg = lexerSession.getValue();
-    let I = $('#input')[0].innerText; // do this to preserve newlines
+    let I = $("#input").data("session").getValue();
     let s = $('#start').text();
 
     if ( typeof(response.data)==="string" ) {
@@ -195,7 +201,7 @@ async function run_antlr() {
     let lexerSession = $("#grammar").data("lexerSession")
     let g = parserSession.getValue()
     let lg = lexerSession.getValue();
-    let I = $('#input')[0].innerText; // do this to preserve newlines
+    let I = $("#input").data("session").getValue();
     let s = $('#start').text();
 
     $("#profile_choice").show();
@@ -415,8 +421,15 @@ function createAceANTLRMode() {
         });
 }
 
-function createdAceEditor(parserSession) {
+function createGrammarEditor() {
+    var parserSession = ace.createEditSession(SAMPLE_PARSER);
+    var lexerSession = ace.createEditSession(SAMPLE_LEXER);
     var editor = ace.edit("grammar");
+
+    $("#grammar").data("parserSession", parserSession);
+    $("#grammar").data("lexerSession", lexerSession);
+    $("#grammar").data("editor", editor)
+
     editor.setSession(parserSession);
     editor.setOptions({
         theme: 'ace/theme/chrome',
@@ -428,30 +441,37 @@ function createdAceEditor(parserSession) {
     // $("#grammar").resize()
 
     createAceANTLRMode()
-    $("#grammar").data("parserSession").setMode("ace/mode/antlr4-mode")
-    $("#grammar").data("lexerSession").setMode("ace/mode/antlr4-mode")
-
+    parserSession.setMode("ace/mode/antlr4-mode")
+    lexerSession.setMode("ace/mode/antlr4-mode")
 
     return editor;
 }
 
-function setupGrammarTabs() {
-    var parserSession = ace.createEditSession(SAMPLE_PARSER);
-    var lexerSession = ace.createEditSession(SAMPLE_LEXER);
-    $("#grammar").data("parserSession", parserSession);
-    $("#grammar").data("lexerSession", lexerSession);
-    var editor = createdAceEditor(parserSession);
+function createInputEditor() {
+    var input = ace.edit("input");
+    let session = ace.createEditSession(SAMPLE_INPUT);
+    $("#input").data("session", session);
+    input.setSession(session);
+    input.setOptions({
+        theme: 'ace/theme/chrome',
+        "highlightActiveLine": false,
+        "readOnly": false,
+        "showLineNumbers": true,
+        "showGutter": false
+    });
+}
 
+function setupGrammarTabs(editor) {
     $("#parsertab").addClass("tabs-header-selected");
     $("#lexertab").removeClass("tabs-header-selected");
 
     $("#parsertab").click(function () {
-        editor.setSession(parserSession);
+        editor.setSession($("#grammar").data("parserSession"));
         $("#parsertab").addClass("tabs-header-selected");
         $("#lexertab").removeClass("tabs-header-selected");
     });
     $("#lexertab").click(function () {
-        editor.setSession(lexerSession);
+        editor.setSession($("#grammar").data("lexerSession"));
         $("#parsertab").removeClass("tabs-header-selected");
         $("#lexertab").addClass("tabs-header-selected");
     });
@@ -489,7 +509,9 @@ $(document).ready(function() {
 
     $(document).tooltip();
 
-    setupGrammarTabs();
+    var editor = createGrammarEditor();
+    setupGrammarTabs(editor);
+    createInputEditor();
 
     setupTreeTabs();
 

@@ -1,8 +1,6 @@
 "use strict";
 
 let ANTLR_SERVICE = "/parse/";
-// let ANTLR_SERVICE = "http://lab.antlr.org/parse/";
-// let ANTLR_SERVICE = "http://localhost/parse/";
 
 let SAMPLE_PARSER =
     "parser grammar ExprParser;\n" +
@@ -76,7 +74,7 @@ function processANTLRResults(response) {
     }
 
     let result = response.data.result;
-    console.log(result);
+    // console.log(result);
 
     if ( "arg_error" in response.data ) {
         $("#tool_errors").html(`<span class="error">${response.data.arg_error}</span><br>`);
@@ -111,73 +109,42 @@ function processANTLRResults(response) {
     $("#input").data("charToChunk", charToChunk);
 
     let Range = ace.require('ace/range').Range;
+
+    let annotations = [];
     for (let ei in lex_errors) {
         let e = lex_errors[ei];
         let a = session.doc.indexToPosition(e.startidx);
         let b = session.doc.indexToPosition(e.erridx+1);
         let r = new Range(a.row, a.column, b.row, b.column);
-        session.addMarker(r, "lexical_error_class", "text");
+        session.addMarker(r, "lexical_error_class", "text", false);
+        annotations.push({
+            row: a.row,
+            text: `${e.line}:${e.pos} ${e.msg}`,
+            type: "error"
+        });
     }
 
-    // charToChunk.forEach((chunk) => {
-    //     if ( 'error' in chunk ) {
-    //         let a = input.session.doc.indexToPosition(chunk.start);
-    //         let b = input.session.doc.indexToPosition(chunk.stop);
-    //         let r = new Range(a.row, a.column, b.row, b.column);
-    //         $("#input").data("session").addMarker();
-    //     }
-    // });
+    for (let ei in parse_errors) {
+        let e = parse_errors[ei];
+        let a = session.doc.indexToPosition(tokens[e.startidx].start);
+        let b = session.doc.indexToPosition(tokens[e.stopidx].stop+1);
+        let r = new Range(a.row, a.column, b.row, b.column);
+        session.addMarker(r, "syntax_error_class", "text", false);
+        annotations.push({
+            row: a.row,
+            text: `${e.line}:${e.pos} ${e.msg}`,
+            type: "error"
+        });
+    }
 
-    // charToChunk = charToChunk.map(c =>
-    //      `<span ${'error' in c ? 'style="color:#E93A2B; text-decoration: underline dotted #E93A2B;"' : ""} class='tooltip' title='${c.tooltip}'>${c.chunktext}</span>`
-    // );
-
-    /*
-    $("#input").html(newInput);
-
-    $('#input span').hover(function (event) {
-        if ( !event.ctrlKey ) return;
-        let oldStyle = $(this).css('text-decoration');
-        if ( $(this).css("cursor")!=="pointer" ) {
-            $(this).css('cursor','pointer');
-        }
-        $(this).data( "text-decoration", oldStyle ); // save
-        $(this)
-            .css('text-decoration', 'underline')
-            .css('font-weight', 'bold')
-            .css('text-decoration-color', 'darkgray').text();
-    }, function () {
-        let oldStyle = $(this).data( "text-decoration");
-        if ( $(this).css("cursor")==="pointer" ) {
-            $(this).css('cursor','auto');
-        }
-        $(this)
-            .css('text-decoration', oldStyle)
-            .css('font-weight', 'normal')
-    });
-
-    $('div span').tooltip({
-        show: {duration: 0}, hide: {duration: 0}, tooltipClass: "mytooltip"
-    });
-
-    // $(document).tooltip("disable").tooltip("hide");
-    $(document).keydown(
-        e => e.ctrlKey ? $(document).tooltip("enable") : null
-    );
-    $(document).keyup(
-        e => $(document).tooltip("disable")
-    );
-    $(document).tooltip("disable");
-*/
+    session.setAnnotations(annotations);
 
     let svgtree = result.svgtree;
     let tree = result.tree;
     let buf = ['<ul id="treeUL">'];
     walk(tree, result, I, buf);
     buf.push('</ul>');
-    console.log(buf.join('\n'));
     $("#svgtree").html("<iframe style='border: none; overflow: auto; min-height: 15em; width: 100%' srcdoc='"+svgtree+"'></iframe>");
-    // $("#svgtree").html("<iframe srcdoc='"+svgtree+"'></iframe>");
     $("#tree").html(buf.join('\n'))
 
     initParseTreeView();
@@ -242,8 +209,6 @@ async function run_antlr() {
 function initParseTreeView() {
     $("#svgtreetab").show();
     $("#treetab").show();
-    // $("#svgtree_header").show();
-    // $("#tree_header").show();
     let toggler = document.getElementsByClassName("tree-root");
     for (let i = 0; i < toggler.length; i++) {
 	// add event handler to open/close
@@ -291,26 +256,14 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
             charToChunk[i] = chunk;
         }
     }
-    for (let ei in lex_errors) {
+    for (let ei in lex_errors) { // set lex error tokens to just error tokens
         let e = lex_errors[ei];
         let errtext = input.slice(e.startidx, e.erridx + 1);
-        let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
-        let chunk = {tooltip:tooltipText, chunktext:errtext, "start":e.startidx, "stop":e.erridx+1, error:true};
+        let chunk = {tooltip:"token recognition error", chunktext:errtext, "start":e.startidx, "stop":e.erridx+1, error:true};
         for (let i = e.startidx; i <= e.erridx; i++) {
             charToChunk[i] = chunk;
         }
     }
-    // augment tooltip for any tokens covered by parse error range
-    /*
-    for (let ei in parse_errors) {
-        let e = parse_errors[ei];
-        let tooltipText = `${e.line}:${e.pos} ${e.msg}`;
-        for (let i = tokens[e.startidx].start; i <= tokens[e.stopidx].stop; i++) {
-            charToChunk[i].tooltip += '\n'+tooltipText;
-            charToChunk[i].error = true;
-        }
-    }
-*/
 
     // chunkify skipped chars (adjacent into one chunk)
     let i = 0;
@@ -333,23 +286,31 @@ function chunkifyInput(input, tokens, symbols, lex_errors, parse_errors) {
     }
 
     return charToChunk;
+}
 
-    /*
-    // Walk input again to get unique chunks
-    i = 0;
-    let chunks = [];
-    let previousChunk = null;
-    while ( i<input.length ) {
-        let currentChunk = charToChunk[i];
-        if ( currentChunk!=previousChunk ) {
-            chunks.push(currentChunk);
+function mouseEventInsideInputText(session) {
+    return function (e) {
+        let pos = e.getDocumentPosition();
+        let ci = session.doc.positionToIndex(pos)
+        let charToChunk = $("#input").data("charToChunk");
+        if (charToChunk != null) {
+            if (ci >= charToChunk.length) {
+                ci = charToChunk.length - 1;
+            }
+            let chunk = charToChunk[ci];
+            if (chunk != null) {
+                if ( 'error' in chunk ) {
+                    $("#tokens").html('(<span style="color:#9A2E06;">'+chunk.tooltip+'</span>)');
+                }
+                else {
+                    $("#tokens").html('('+chunk.tooltip+')')
+                }
+            }
+            // console.log(pos, ci, chunk);
+        } else {
+            // console.log(pos, ci);
         }
-        previousChunk = currentChunk;
-        i++;
-    }
-    console.log(chunks);
-    return chunks;
-     */
+    };
 }
 
 function showToolErrors(response) {
@@ -487,34 +448,15 @@ function createInputEditor() {
         "highlightActiveLine": false,
         "readOnly": false,
         "showLineNumbers": true,
-        "showGutter": false,
+        "showGutter": true,
         "printMargin": false
     });
 
-    input.on("blur", function(e) {
-        console.log("BLUR");
+    $("#input").on('mouseleave', function() {
         $("#tokens").html("");
     });
 
-    input.on("mousemove", function(e) {
-        let pos = e.getDocumentPosition();
-        let ci = session.doc.positionToIndex(pos)
-        let charToChunk = $("#input").data("charToChunk");
-        if ( charToChunk!=null ) {
-            if ( ci>=charToChunk.length ) {
-                ci = charToChunk.length-1;
-            }
-            let chunk = charToChunk[ci];
-            if ( chunk==null ) {
-                console.log("no chunk at ", ci)
-            }
-            console.log(pos, ci, chunk);
-            $("#tokens").html(chunk.tooltip)
-        }
-        else {
-            console.log(pos, ci);
-        }
-    });
+    input.on("mousemove", mouseEventInsideInputText(session));
 }
 
 function setupGrammarTabs(editor) {
@@ -534,8 +476,6 @@ function setupGrammarTabs(editor) {
 }
 
 function setupTreeTabs() {
-    // $("#svgtree_header").hide();
-    // $("#tree_header").hide();
     $("#svgtreetab").hide();
     $("#treetab").hide();
     $("#svgtreetab").addClass("tabs-header-selected");

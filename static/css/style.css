@@ -3,6 +3,13 @@
     height: 100%;
 }
 
+.intro {
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    color: #404040;
+    font-weight: normal;
+}
+
 .editor {
     border: solid .5px #7F7F7F;
     font-family: 'Inconsolata', 'Menlo', monospace;

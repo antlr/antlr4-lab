@@ -13,7 +13,7 @@ let SAMPLE_PARSER =
     "\n" +
     //"foo : 'a' 'abc' 'a\\'b' '\\u34ab' 'ab\\ncd' ;\n" +
     "stat: ID '=' expr ';'\n" +
-    "    | expr ';' ; ; ;\n" +
+    "    | expr ';'\n" +
     "    ;\n" +
     "\n" +
     "def : ID '(' ID (',' ID)* ')' '{' stat* '}' ;\n" +

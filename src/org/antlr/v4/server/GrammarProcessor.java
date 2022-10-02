@@ -35,8 +35,8 @@ public class GrammarProcessor {
         Tool antlrTool = new Tool();
         ErrorManager errMgr = new ErrorManager(antlrTool);
         errMgr.setFormat("antlr");
-        CollectGrammarErrorsAndWarnings lexlistener = new CollectParserGrammarErrorsAndWarnings(errMgr);
-        CollectGrammarErrorsAndWarnings parselistener = new CollectLexerGrammarErrorsAndWarnings(errMgr);
+        CollectGrammarErrorsAndWarnings parselistener = new CollectParserGrammarErrorsAndWarnings(errMgr);
+        CollectGrammarErrorsAndWarnings lexlistener = new CollectLexerGrammarErrorsAndWarnings(errMgr);
         List<String> warnings = new ArrayList<>();
         try {
             if ( lexGrammar!=null && lexGrammar.strip().length()>0 ) {

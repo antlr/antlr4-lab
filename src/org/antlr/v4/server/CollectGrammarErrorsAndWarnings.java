@@ -30,6 +30,8 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
         msg.fileName = fileName;
         ST msgST = errMgr.getMessageTemplate(msg);
         String outputMsg = msgST.render();
+        // hack to remove "lexer:" fileName etc...
+        outputMsg = outputMsg.replace(": "+fileName+":", ": ");
         if ( errMgr.formatWantsSingleLineMessage() ) {
             outputMsg = outputMsg.replace('\n', ' ');
         }
@@ -50,6 +52,8 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
         msg.fileName = fileName;
         ST msgST = errMgr.getMessageTemplate(msg);
         String outputMsg = msgST.render();
+        // hack to remove "lexer:" fileName etc...
+        outputMsg = outputMsg.replace(": "+fileName+":", ": ");
         if ( errMgr.formatWantsSingleLineMessage() ) {
             outputMsg = outputMsg.replace('\n', ' ');
         }

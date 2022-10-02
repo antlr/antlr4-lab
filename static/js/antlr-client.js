@@ -13,7 +13,7 @@ let SAMPLE_PARSER =
     "\n" +
     //"foo : 'a' 'abc' 'a\\'b' '\\u34ab' 'ab\\ncd' ;\n" +
     "stat: ID '=' expr ';'\n" +
-    "    | expr ';'\n" +
+    "    | expr ';' ; ; ;\n" +
     "    ;\n" +
     "\n" +
     "def : ID '(' ID (',' ID)* ')' '{' stat* '}' ;\n" +
@@ -91,6 +91,36 @@ function processANTLRResults(response) {
     }
 
     showToolErrors(response);
+
+    removeAllMarkers(parserSession);
+    parserSession.setAnnotations(null);
+    removeAllMarkers(lexerSession);
+    lexerSession.setAnnotations(null);
+
+    let parser_grammar_errors = response.data.parser_grammar_errors;
+    let lexer_grammar_errors = response.data.lexer_grammar_errors;
+
+    let grammarAnnotations = [];
+    for (let ei in parser_grammar_errors) {
+        let e = parser_grammar_errors[ei];
+        grammarAnnotations.push({
+            row: e.line-1,
+            text: e.msg,
+            type: "error"
+        });
+    }
+    parserSession.setAnnotations(grammarAnnotations);
+
+    grammarAnnotations = [];
+    for (let ei in lexer_grammar_errors) {
+        let e = lexer_grammar_errors[ei];
+        grammarAnnotations.push({
+            row: e.line-1,
+            text: e.msg,
+            type: "error"
+        });
+    }
+    lexerSession.setAnnotations(grammarAnnotations);
 
     if ( Object.keys(result).length===0 ) {
         return;
@@ -432,6 +462,13 @@ function createGrammarEditor() {
         "printMargin": false
     });
     // $("#grammar").resize()
+
+    $("#grammar").keyup(function() {
+        parserSession.setAnnotations(null);
+        removeAllMarkers(parserSession);
+        lexerSession.setAnnotations(null);
+        removeAllMarkers(lexerSession);
+    });
 
     createAceANTLRMode()
     parserSession.setMode("ace/mode/antlr4-mode")

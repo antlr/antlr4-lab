@@ -110,6 +110,9 @@ function processANTLRResults(response) {
 
     let Range = ace.require('ace/range').Range;
 
+    removeAllMarkers(session);
+    session.setAnnotations(null);
+
     let annotations = [];
     for (let ei in lex_errors) {
         let e = lex_errors[ei];
@@ -437,6 +440,16 @@ function createGrammarEditor() {
     return editor;
 }
 
+function removeAllMarkers(session) {
+    const markers = session.getMarkers();
+    if (markers) {
+        const keys = Object.keys(markers);
+        for (let item of keys) {
+            session.removeMarker(markers[item].id);
+        }
+    }
+}
+
 function createInputEditor() {
     var input = ace.edit("input");
     let session = ace.createEditSession(SAMPLE_INPUT);
@@ -454,6 +467,11 @@ function createInputEditor() {
 
     $("#input").on('mouseleave', function() {
         $("#tokens").html("");
+    });
+
+    $("#input").keyup(function() {
+        session.setAnnotations(null);
+        removeAllMarkers(session);
     });
 
     input.on("mousemove", mouseEventInsideInputText(session));

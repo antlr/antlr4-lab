@@ -8,7 +8,7 @@ Ubuntu with lab.antlr.org static IP
 ```bash
 cd ~
 sudo apt-get update
-sudo apt install openjdk-11-jre-headless
+sudo apt install openjdk-11-jre
 sudo apt install maven
 sudo apt install git
 sudo apt install ghostscript # gets ps2pdf

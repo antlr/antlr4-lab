@@ -585,31 +585,6 @@ function select_grammar(selectedValue){
 			$("#input").data("session").setValue(data);
 		});
 		$("#start").text(found.start);
-
-/*
-		setupTreeTabs();
-
-		$("#profile_choice").hide();
-		$("#profile_header").hide();
-		$("#profile").hide();
-		$("#profile_choice").click(function () {
-			if ( $("#profile_choice").text().startsWith("Show") ) {
-				$("#profile_choice").text("Hide profiler");
-				$("#profile_header").show();
-				$("#profile").show();
-			}
-			else {
-				$("#profile_choice").text("Show profiler");
-				$("#profile_header").hide();
-				$("#profile").hide();
-			}
-		});
-
-		$("#tool_errors").hide();
-		$("#parse_errors").hide();
-		$("#tool_errors_header").hide();
-		$("#parse_errors_header").hide();
-*/
 	}
 	else {
 		$("#grammar").data("lexerSession").setValue(SAMPLE_LEXER);
@@ -620,6 +595,16 @@ function select_grammar(selectedValue){
 		$("#parsertab").addClass("tabs-header-selected");
 		$("#lexertab").removeClass("tabs-header-selected");
 	}
+	let session = $("#input").data("session");
+	session.setAnnotations(null);
+	removeAllMarkers(session);
+	let parserSession = $("#grammar").data("parserSession");
+	parserSession.setAnnotations(null);
+	removeAllMarkers(parserSession);
+	let lexerSession = $("#grammar").data("lexerSession");
+	lexerSession.setAnnotations(null);
+	removeAllMarkers(lexerSession);
+	$("#input").data("charToChunk", null);
 }
 
 function setupSelectGrammarTable() {

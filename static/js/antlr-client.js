@@ -562,12 +562,19 @@ function select_grammar(selectedValue){
 	// Set grammar.
 	if (found)
 	{
-		$.get(found.lexer).done(function(data){
-			$("#grammar").data("lexerSession").setValue(data);
+		if (found.lexer != "") {
+			$.get(found.lexer).done(function(data){
+				$("#grammar").data("lexerSession").setValue(data);
+				$("#grammar").data("editor").setSession($("#grammar").data("lexerSession")); // force redraw.
+				$("#parsertab").removeClass("tabs-header-selected");
+				$("#lexertab").addClass("tabs-header-selected");
+			});
+		} else {
+			$("#grammar").data("lexerSession").setValue("");
 			$("#grammar").data("editor").setSession($("#grammar").data("lexerSession")); // force redraw.
 			$("#parsertab").removeClass("tabs-header-selected");
 			$("#lexertab").addClass("tabs-header-selected");
-		});
+		}
 		$.get(found.parser).done(function(data){
 			$("#grammar").data("parserSession").setValue(data);
 			$("#grammar").data("editor").setSession($("#grammar").data("parserSession")); // force redraw.

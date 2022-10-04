@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/grammars-v4.js"></script>
     <script src="js/antlr-client.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.10.1/ace.js" type="text/javascript" charset="utf-8"></script>
 </head>
@@ -60,6 +61,10 @@
 
         <!-- RUN BUTTON -->
 
+        <br>
+        <select id="selectgrammar" size=1 onchange="select_grammar(this.value)">
+            <option value="Expr" selected>Expr</option>
+        </select>
         <br>
         <span class="chunk-header">Start rule</span>&nbsp;<img title="Enter a rule name here from your grammar to the left where parsing should begin for the input specified above. Hit Run to test." src="images/helpicon.png" width="12" align="bottom"><br>
         <span class='editor' id="start" contenteditable="true" style="min-height: 1em; min-width: 10em; max-width: 20em">program</span>

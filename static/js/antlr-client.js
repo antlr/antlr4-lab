@@ -552,6 +552,83 @@ function setupTreeTabs() {
     });
 }
 
+function select_grammar(selectedValue){
+	// Find.
+	var name = $("#selectgrammar option:selected" ).text();
+	const found = grammars_v4.find(function(element)
+	{
+		return element.name == name;
+	});
+	// Set grammar.
+	if (found)
+	{
+		$.get(found.lexer).done(function(data){
+			$("#grammar").data("lexerSession").setValue(data);
+			$("#grammar").data("editor").setSession($("#grammar").data("lexerSession")); // force redraw.
+			$("#parsertab").removeClass("tabs-header-selected");
+			$("#lexertab").addClass("tabs-header-selected");
+		});
+		$.get(found.parser).done(function(data){
+			$("#grammar").data("parserSession").setValue(data);
+			$("#grammar").data("editor").setSession($("#grammar").data("parserSession")); // force redraw.
+			$("#parsertab").addClass("tabs-header-selected");
+			$("#lexertab").removeClass("tabs-header-selected");
+		});
+		$.get(found.example).done(function(data){
+			$("#input").data("session").setValue(data);
+		});
+		$("#start").text(found.start);
+
+/*
+		setupTreeTabs();
+
+		$("#profile_choice").hide();
+		$("#profile_header").hide();
+		$("#profile").hide();
+		$("#profile_choice").click(function () {
+			if ( $("#profile_choice").text().startsWith("Show") ) {
+				$("#profile_choice").text("Hide profiler");
+				$("#profile_header").show();
+				$("#profile").show();
+			}
+			else {
+				$("#profile_choice").text("Show profiler");
+				$("#profile_header").hide();
+				$("#profile").hide();
+			}
+		});
+
+		$("#tool_errors").hide();
+		$("#parse_errors").hide();
+		$("#tool_errors_header").hide();
+		$("#parse_errors_header").hide();
+*/
+	}
+	else {
+		$("#grammar").data("lexerSession").setValue(SAMPLE_LEXER);
+		$("#grammar").data("parserSession").setValue(SAMPLE_PARSER);
+		$("#input").data("session").setValue(SAMPLE_INPUT);
+		$("#start").text("program");
+		$("#grammar").data("editor").setSession($("#grammar").data("parserSession")); // force redraw.
+		$("#parsertab").addClass("tabs-header-selected");
+		$("#lexertab").removeClass("tabs-header-selected");
+	}
+}
+
+function setupSelectGrammarTable() {
+	var selectgrammar = $("#selectgrammar").get(0);
+	var i = 0;
+	{
+		var opt = new Option("Expr", "Expr");
+		selectgrammar.options[i] = opt;
+		i = i + 1;
+	}
+	for (const g of grammars_v4) {
+		var opt = new Option(g.name, g.name);
+		selectgrammar.options[i] = opt;
+		i = i + 1;
+	}
+}
 // MAIN
 $(document).ready(function() {
     String.prototype.sliceReplace = function (start, end, repl) {
@@ -586,4 +663,5 @@ $(document).ready(function() {
     $("#parse_errors").hide();
     $("#tool_errors_header").hide();
     $("#parse_errors_header").hide();
+    setupSelectGrammarTable();
 });

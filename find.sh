@@ -14,6 +14,13 @@ fi
 cd Generated/grammars-v4
 cat -<<EOF
 var grammars_v4 = [
+	{
+		name: "Expr",
+		lexer: "SAMPLE_LEXER",
+		parser: "SAMPLE_PARSER",
+		start: "program",
+		example: ["SAMPLE_INPUT"]
+	},
 EOF
 for i in `find . -name pom.xml`
 do

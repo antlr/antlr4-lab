@@ -581,10 +581,11 @@ function select_grammar(selectedValue){
 			$("#parsertab").addClass("tabs-header-selected");
 			$("#lexertab").removeClass("tabs-header-selected");
 		});
-		$.get(found.example).done(function(data){
+		$.get(found.example[0]).done(function(data){
 			$("#input").data("session").setValue(data);
 		});
 		$("#start").text(found.start);
+		setupSelectInputTable(found);
 	}
 	else {
 		$("#grammar").data("lexerSession").setValue(SAMPLE_LEXER);
@@ -594,6 +595,7 @@ function select_grammar(selectedValue){
 		$("#grammar").data("editor").setSession($("#grammar").data("parserSession")); // force redraw.
 		$("#parsertab").addClass("tabs-header-selected");
 		$("#lexertab").removeClass("tabs-header-selected");
+		setupSelectInputTable(grammars_v4[0]);
 	}
 	let session = $("#input").data("session");
 	session.setAnnotations(null);
@@ -607,20 +609,66 @@ function select_grammar(selectedValue){
 	$("#input").data("charToChunk", null);
 }
 
+function select_input(selectedValue){
+	// Find.
+	var gname = $("#selectgrammar option:selected" ).text();
+	const gfound = grammars_v4.find(function(g)
+	{
+		return g.name == gname;
+	});
+	if (!gfound) {
+		return;
+	}
+	var iname = $("#selectinput option:selected" ).text();
+	const found = gfound.example.find(function(i)
+	{
+		return i == iname;
+	});
+	// Set input.
+	if (found)
+	{
+		console.log("found");
+		$.get(found).done(function(data){
+			$("#input").data("session").setValue(data);
+		});
+		$("#start").text(found.start);
+	}
+	else {
+		console.log("not found");
+	}
+	let session = $("#input").data("session");
+	session.setAnnotations(null);
+	removeAllMarkers(session);
+	let parserSession = $("#grammar").data("parserSession");
+	parserSession.setAnnotations(null);
+	removeAllMarkers(parserSession);
+	let lexerSession = $("#grammar").data("lexerSession");
+	lexerSession.setAnnotations(null);
+	removeAllMarkers(lexerSession);
+	$("#input").data("charToChunk", null);
+}
+
+function setupSelectInputTable(grammar) {
+	console.log(grammar);
+	var select = $("#selectinput").get(0);
+	var i = 0;
+	for (const e of grammar.example) {
+		var opt = new Option(e, e);
+		select.options[i] = opt;
+		i = i + 1;
+	}
+}
+
 function setupSelectGrammarTable() {
 	var selectgrammar = $("#selectgrammar").get(0);
 	var i = 0;
-	{
-		var opt = new Option("Expr", "Expr");
-		selectgrammar.options[i] = opt;
-		i = i + 1;
-	}
 	for (const g of grammars_v4) {
 		var opt = new Option(g.name, g.name);
 		selectgrammar.options[i] = opt;
 		i = i + 1;
 	}
 }
+
 // MAIN
 $(document).ready(function() {
     String.prototype.sliceReplace = function (start, end, repl) {
@@ -656,4 +704,5 @@ $(document).ready(function() {
     $("#tool_errors_header").hide();
     $("#parse_errors_header").hide();
     setupSelectGrammarTable();
+    setupSelectInputTable(grammars_v4[0]);
 });

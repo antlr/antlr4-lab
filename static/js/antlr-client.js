@@ -651,6 +651,11 @@ function select_input(selectedValue){
 function setupSelectInputTable(grammar) {
 	console.log(grammar);
 	var select = $("#selectinput").get(0);
+	var j, L = select.options.length - 1;
+	for(j = L; j >= 0; j--) {
+		select.remove(j);
+	}
+	select.selectedIndex = 0
 	var i = 0;
 	for (const e of grammar.example) {
 		var opt = new Option(e, e);

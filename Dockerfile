@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 
 FROM ubuntu:latest
-#FROM maven:3.8.3-openjdk-17 AS build
 
-# Install basic software support
-RUN apt-get update && \
-    apt-get install --yes software-properties-common
-
+ARG LAB_VERSION=0.1-SNAPSHOT
+ENV LAB_VERSION=${LAB_VERSION}
 
 USER root:root
+
+RUN apt-get update && \
+    apt-get install --yes software-properties-common
 
 WORKDIR /app
 
@@ -24,28 +24,6 @@ COPY resources /app/resources
 COPY static /app/static
 COPY pom.xml /app/pom.xml
 
-RUN ls -la /app/*
-
-ADD target/antlr4-lab-0.1-SNAPSHOT-complete.jar antlr4-lab-0.1-SNAPSHOT-complete.jar
-ENTRYPOINT ["java","-jar","/app/antlr4-lab-0.1-SNAPSHOT-complete.jar"]
+ADD target/antlr4-lab-$LAB_VERSION-complete.jar antlr4-lab-$LAB_VERSION-complete.jar
+ENTRYPOINT java -jar /app/antlr4-lab-$LAB_VERSION-complete.jar
 EXPOSE 80
-
-# ---------------
-
-#RUN mvn dependency:resolve
-RUN mvn -Dmaven.repo.local=/app install
-#RUN mvn install
-
-#FROM gcr.io/distroless/java
-#COPY --from=build /app/target/antlr4-lab-0.1-SNAPSHOT-complete.jar /app/antlr4-lab-0.1-SNAPSHOT-complete.jar
-
-#COPY /app/target/antlr4-lab-0.1-SNAPSHOT-complete.jar /app
-#COPY /app/org/antlr/antlr4-lab/0.1-SNAPSHOT/antlr4-lab-0.1-SNAPSHOT-complete.jar /app
-#COPY target/antlr4-lab-0.1-SNAPSHOT-complete.jar /app
-#EXPOSE 80
-
-#RUN "cp", "target/antlr4-lab-0.1-SNAPSHOT-complete.jar", "/app"]
-#CMD ["java", "-cp", "/app/org/antlr/antlr4-lab/0.1-SNAPSHOT/antlr4-lab-0.1-SNAPSHOT.jar", "org.antlr.v4.server.ANTLRHttpServer"]
-#CMD ["java", "-cp", "/app/antlr4-lab-0.1-SNAPSHOT-complete.jar", "org.antlr.v4.server.ANTLRHttpServer"]
-#mvn compile exec:java -Dexec.mainClass="com.baeldung.main.Exec"
-

@@ -16,8 +16,6 @@ RUN apt update
 RUN apt install -y ghostscript pdf2svg texlive-extra-utils
 
 RUN apt install -y openjdk-11-jre
-RUN apt install -y maven
-RUN apt install -y git
 
 COPY src /app/src
 COPY resources /app/resources

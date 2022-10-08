@@ -13,7 +13,7 @@
 	<url>http://www.antlr.org</url>
 	<description>The ANTLR 4 server.</description>
 
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 
 	<licenses>
 		<license>

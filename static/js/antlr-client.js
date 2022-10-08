@@ -610,32 +610,26 @@ function select_grammar(selectedValue){
 }
 
 function select_input(selectedValue){
-	// Find.
-	var gname = $("#selectgrammar option:selected" ).text();
-	const gfound = grammars_v4.find(function(g)
-	{
-		return g.name == gname;
-	});
-	if (!gfound) {
-		return;
+	// Find selected input.
+	var name = $("#selectinput option:selected" ).text();
+	var select = $("#selectinput").get(0);
+	var j, L = select.options.length - 1;
+	var found = false;
+	for(j = L; j >= 0; j--) {
+		var option = select.options[j];
+		if (option.selected)
+		{
+			// Set input.
+			console.log("found " + option);
+			var url = option.value;
+			$.get(url).done(function(data){
+				$("#input").data("session").setValue(data);
+			});
+			$("#start").text(found.start);
+			found = true;
+		}
 	}
-	var iname = $("#selectinput option:selected" ).text();
-	const found = gfound.example.find(function(i)
-	{
-		return i == iname;
-	});
-	// Set input.
-	if (found)
-	{
-		console.log("found");
-		$.get(found).done(function(data){
-			$("#input").data("session").setValue(data);
-		});
-		$("#start").text(found.start);
-	}
-	else {
-		console.log("not found");
-	}
+	if (! found) return;
 	let session = $("#input").data("session");
 	session.setAnnotations(null);
 	removeAllMarkers(session);
@@ -651,6 +645,7 @@ function select_input(selectedValue){
 function setupSelectInputTable(grammar) {
 	console.log(grammar);
 	var select = $("#selectinput").get(0);
+	// remove all previous entries in the "input" select control.
 	var j, L = select.options.length - 1;
 	for(j = L; j >= 0; j--) {
 		select.remove(j);
@@ -658,7 +653,13 @@ function setupSelectInputTable(grammar) {
 	select.selectedIndex = 0
 	var i = 0;
 	for (const e of grammar.example) {
-		var opt = new Option(e, e);
+		// insert an option for "input" select control that
+		// contains the name of the file, without base
+		// directory.
+		var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
+		var trunc = e.substring(prefix.length);
+		console.log(trunc);
+		var opt = new Option(trunc, e);
 		select.options[i] = opt;
 		i = i + 1;
 	}

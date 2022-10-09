@@ -507,9 +507,11 @@ function createInputEditor() {
         $("#tokens").html("");
     });
 
-    $("#input").keyup(function() {
-        session.setAnnotations(null);
-        removeAllMarkers(session);
+    $("#input").keyup(function(e) {
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+            session.setAnnotations(null);
+            removeAllMarkers(session);
+        }
     });
 
     input.on("mousemove", mouseEventInsideInputText(session));

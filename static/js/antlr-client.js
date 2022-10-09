@@ -557,6 +557,32 @@ function setupTreeTabs() {
     });
 }
 
+function dragOverHandler(e) {
+    // Prevent default behavior (Prevent file from being opened)
+    e.preventDefault();
+}
+
+function dropHandler(e,whichEditor) {
+    e.preventDefault();
+    // See https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
+    // Use DataTransferItemList interface to access the file(s)
+    for (let f of e.dataTransfer.items) {
+        // If dropped items aren't files, reject them
+        if (f.kind === 'file') {
+            const file = f.getAsFile();
+            console.log(`name = ${file.name}`);
+            file.text().then((content)=> {
+                if ( whichEditor === 'grammar' ) {
+                    $("#grammar").data("editor").session.setValue(content);
+                }
+                else if ( whichEditor === 'input' ) {
+                    $("#input").data("editor").session.setValue(content);
+                }
+            });
+        }
+    }
+}
+
 // MAIN
 $(document).ready(function() {
     String.prototype.sliceReplace = function (start, end, repl) {

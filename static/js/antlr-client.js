@@ -464,11 +464,13 @@ function createGrammarEditor() {
     });
     // $("#grammar").resize()
 
-    $("#grammar").keyup(function() {
-        parserSession.setAnnotations(null);
-        removeAllMarkers(parserSession);
-        lexerSession.setAnnotations(null);
-        removeAllMarkers(lexerSession);
+    $("#grammar").keyup(function(e) {
+        if ( (e.key.length === 1 && !e.ctrlKey && !e.metaKey) || e.keyCode==='\n' ) {
+            parserSession.setAnnotations(null);
+            removeAllMarkers(parserSession);
+            lexerSession.setAnnotations(null);
+            removeAllMarkers(lexerSession);
+        }
     });
 
     createAceANTLRMode()

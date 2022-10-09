@@ -557,6 +557,52 @@ function setupTreeTabs() {
     });
 }
 
+function dragOverHandler(e,whichEditor) {
+    // Prevent default behavior (Prevent file from being opened)
+    e.preventDefault();
+    e.stopPropagation();
+    $("#"+whichEditor).addClass("drag-over");
+}
+
+function dragLeaveHandler(e,whichEditor) {
+    // Prevent default behavior (Prevent file from being opened)
+    $("#"+whichEditor).removeClass("drag-over");
+}
+
+function dropHandler(e,whichEditor) {
+    e.preventDefault();
+    // See https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
+    // Use DataTransferItemList interface to access the file(s)
+    let editor = $("#"+whichEditor).data("editor");
+    let session = editor.session;
+    for (let f of e.dataTransfer.items) {
+        // If dropped items aren't files, reject them
+        if (f.kind === 'file') {
+            const file = f.getAsFile();
+            session.setAnnotations(null);
+            removeAllMarkers(session);
+            file.text().then((content)=> {
+                session.setValue(content);
+                $("#"+whichEditor).removeClass("drag-over");
+            });
+        }
+    }
+}
+
+function setUpDragAndDrop() {
+    for (let el of ["grammar", "input"]) {
+        $("#"+el).on('dragover', (e) => {
+            dragOverHandler(e, el);
+        });
+        $("#"+el).on('dragleave', (e) => {
+            dragLeaveHandler(e, el);
+        });
+        $("#"+el).on('drop', (e) => {
+            dropHandler(e.originalEvent, el);
+        });
+    }
+}
+
 // MAIN
 $(document).ready(function() {
     String.prototype.sliceReplace = function (start, end, repl) {
@@ -591,4 +637,6 @@ $(document).ready(function() {
     $("#parse_errors").hide();
     $("#tool_errors_header").hide();
     $("#parse_errors_header").hide();
+
+    setUpDragAndDrop();
 });

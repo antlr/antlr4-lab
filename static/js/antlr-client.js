@@ -177,7 +177,8 @@ function processANTLRResults(response) {
     let buf = ['<ul id="treeUL">'];
     walk(tree, result, I, buf);
     buf.push('</ul>');
-    $("#svgtree").html("<iframe style='border: none; overflow: auto; min-height: 15em; width: 100%' srcdoc='"+svgtree+"'></iframe>");
+    let b64_svgtree = btoa(unescape(encodeURIComponent(svgtree)))
+    $("#svgtree").html("<img src='data:image/svg+xml;base64,"+b64_svgtree+"'></img>");
     $("#tree").html(buf.join('\n'))
 
     initParseTreeView();

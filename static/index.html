@@ -66,6 +66,9 @@
             <div style="flex-grow: 1">
             <div class="chunk-header">Input <img title="Enter text that follows the syntax described in your grammar. Hit the Run button to test. Then move mouse over text to see how the tokens were matched. Hover over red gutter annotation to see error messages." src="images/helpicon.png" width="13" align="center">&nbsp;&nbsp;<span id="tokens"></span></div>
             </div>
+            <select id="selectinput" size=1 style="max-width:30%;" onchange="select_input(this.value)">
+               <option value="expression" selected>expression</option>
+            </select>
             <div id="input" style="border: grey .5px solid;"></div>
 
             <!-- RUN BUTTON -->

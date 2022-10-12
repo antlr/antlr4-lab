@@ -680,12 +680,7 @@ function setupSelectInputTable(grammar) {
 	select.selectedIndex = 0
 	var i = 0;
 	for (const e of grammar.example) {
-		// insert an option for "input" select control that
-		// contains the name of the file, without base
-		// directory.
-		var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
-		var trunc = e.substring(prefix.length);
-		var opt = new Option(trunc, e);
+		var opt = new Option(e, e);
 		select.options[i] = opt;
 		i = i + 1;
 	}
@@ -698,6 +693,10 @@ function setupSelectGrammarTable() {
 		grammars_v4 = JSON.parse(data);
 		var selectgrammar = $("#selectgrammar").get(0);
 		var i = 0;
+		// Enter in hardwired "Expr" contained in this code.
+		var hw = new Option("Expr", "Expr");
+		selectgrammar.options[i] = hw;
+		++i;
 		for (const g of grammars_v4) {
 			var opt = new Option(g.name, g.name);
 			selectgrammar.options[i] = opt;

@@ -690,7 +690,20 @@ function setupSelectGrammarTable() {
 	var grammars = "";
 	$.get("https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json")
 			.done(function(data) {
-		grammars_v4 = JSON.parse(data);
+		var g_before = JSON.parse(data);
+		g_before.sort(function(a, b)
+		{
+			let fa = a.name.toLowerCase(),
+			fb = b.name.toLowerCase();
+			if (fa < fb) {
+				return -1;
+			}
+			if (fa > fb) {
+				return 1;
+			}
+			return 0;
+		});
+		grammars_v4 = g_before;
 		var selectgrammar = $("#selectgrammar").get(0);
 		var i = 0;
 		// Enter in hardwired "Expr" contained in this code.

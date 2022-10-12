@@ -586,7 +586,16 @@ function select_grammar(selectedValue){
 			$("#parsertab").addClass("tabs-header-selected");
 			$("#lexertab").removeClass("tabs-header-selected");
 		});
-		$.get(found.example[0]).done(function(data){
+		console.log("found = " + found.example[0]);
+		var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
+		var trunc = found.parser.substring(prefix.length);
+		// remove parser grammar file name, assume that it's
+		// the root (which is wrong!).
+		var last = trunc.lastIndexOf("/");
+		var x = trunc.substring(0, last);
+		console.log("x = " + x);
+		var fname = prefix + x + "/examples/" + found.example[0];
+		$.get(fname).done(function(data){
 			$("#input").data("session").setValue(data);
 		});
 		$("#start").text(found.start);
@@ -615,6 +624,12 @@ function select_grammar(selectedValue){
 }
 
 function select_input(selectedValue){
+	// Find grammar.
+	var name = $("#selectgrammar option:selected" ).text();
+	const found_grammar = grammars_v4.find(function(element)
+	{
+		return element.name == name;
+	});
 	// Find selected input.
 	var name = $("#selectinput option:selected" ).text();
 	var select = $("#selectinput").get(0);
@@ -625,8 +640,16 @@ function select_input(selectedValue){
 		if (option.selected)
 		{
 			// Set input.
-			console.log("found " + option);
-			var url = option.value;
+			var x = option.value;
+			console.log("x = " + x);
+			var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
+			var trunc = found_grammar.parser.substring(prefix.length);
+			// remove parser grammar file name, assume that it's
+			// the root (which is wrong!).
+			var last = trunc.lastIndexOf("/");
+			var y = trunc.substring(0, last);
+			console.log("y = " + y);
+			var url = prefix + y + "/examples/" + x;
 			$.get(url).done(function(data){
 				$("#input").data("session").setValue(data);
 			});
@@ -648,7 +671,6 @@ function select_input(selectedValue){
 }
 
 function setupSelectInputTable(grammar) {
-	console.log(grammar);
 	var select = $("#selectinput").get(0);
 	// remove all previous entries in the "input" select control.
 	var j, L = select.options.length - 1;
@@ -663,7 +685,6 @@ function setupSelectInputTable(grammar) {
 		// directory.
 		var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 		var trunc = e.substring(prefix.length);
-		console.log(trunc);
 		var opt = new Option(trunc, e);
 		select.options[i] = opt;
 		i = i + 1;
@@ -674,9 +695,7 @@ function setupSelectGrammarTable() {
 	var grammars = "";
 	$.get("https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json")
 			.done(function(data) {
-		console.log("before grammars-v4 " + grammars_v4);
 		grammars_v4 = JSON.parse(data);
-		console.log("after grammars-v4 " + grammars_v4);
 		var selectgrammar = $("#selectgrammar").get(0);
 		var i = 0;
 		for (const g of grammars_v4) {

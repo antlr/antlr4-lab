@@ -671,13 +671,20 @@ function setupSelectInputTable(grammar) {
 }
 
 function setupSelectGrammarTable() {
-	var selectgrammar = $("#selectgrammar").get(0);
-	var i = 0;
-	for (const g of grammars_v4) {
-		var opt = new Option(g.name, g.name);
-		selectgrammar.options[i] = opt;
-		i = i + 1;
-	}
+	var grammars = "";
+	$.get("https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json")
+			.done(function(data) {
+		console.log("before grammars-v4 " + grammars_v4);
+		grammars_v4 = JSON.parse(data);
+		console.log("after grammars-v4 " + grammars_v4);
+		var selectgrammar = $("#selectgrammar").get(0);
+		var i = 0;
+		for (const g of grammars_v4) {
+			var opt = new Option(g.name, g.name);
+			selectgrammar.options[i] = opt;
+			i = i + 1;
+		}
+	});
 }
 
 function dragOverHandler(e,whichEditor) {

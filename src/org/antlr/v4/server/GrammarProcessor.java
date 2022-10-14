@@ -21,6 +21,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 
 public class GrammarProcessor {
     /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
@@ -149,18 +152,49 @@ public class GrammarProcessor {
     }
 
     public static String toSVG(Tree t, List<String> ruleNames) throws IOException {
-        Trees.writePS(t, ruleNames, Path.of(IMAGES_DIR, "temp.ps").toAbsolutePath().toString());
-        String[] results = execInDir(IMAGES_DIR, "ps2pdf", "temp.ps", "temp.pdf");
+	String ps_fn = Path.of(IMAGES_DIR, "temp.ps").toAbsolutePath().toString();
+        Trees.writePS(t, ruleNames, ps_fn);
+
+	// Open PS file and pick off line with '%%BoundingBox: 0 0 3857
+	// 414'.
+	File file = new File(ps_fn);
+	BufferedReader br = new BufferedReader(new FileReader(file));
+	br.readLine();
+	String string = br.readLine();
+	//file.close();
+	int i2 = string.lastIndexOf(' ');
+	int i1 = string.lastIndexOf(' ', i2 - 1);
+	String s1 = string.substring(i1+1, i2);
+	String s2 = string.substring(i2+1);
+	int width = 1000;
+	try{
+	    width = Integer.parseInt(s1);
+	}
+	catch (NumberFormatException ex){
+	    ex.printStackTrace();
+	}
+	int height = 1000;
+	try{
+	    height = Integer.parseInt(s2);
+	}
+	catch (NumberFormatException ex){
+	    ex.printStackTrace();
+	}
+
+	String[] results = execInDir(IMAGES_DIR, "ps2pdf",
+				     "-dDEVICEWIDTHPOINTS=" + width,
+				     "-dDEVICEHEIGHTPOINTS=" + height,
+				     "temp.ps", "temp.pdf");
         if (results[1].length() > 0) {
             System.err.println(results[1]);
-        }
+	}
 
-        results = execInDir(IMAGES_DIR, "pdfcrop", "--hires", "temp.pdf"); // creates temp-crop.pdf
-        if (results[1].length() > 0) {
-            System.err.println(results[1]);
-        }
+//        results = execInDir(IMAGES_DIR, "pdfcrop", "--hires", "temp.pdf"); // creates temp-crop.pdf
+//        if (results[1].length() > 0) {
+//            System.err.println(results[1]);
+//        }
 
-        results = execInDir(IMAGES_DIR, "pdf2svg", "temp-crop.pdf", "temp.svg");
+	results = execInDir(IMAGES_DIR, "pdf2svg", "temp.pdf", "temp.svg");
         if (results[1].length() > 0) {
             System.err.println(results[1]);
         }

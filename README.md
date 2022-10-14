@@ -35,7 +35,7 @@ If you are running the server locally on your box, visit [http://localhost/index
 
 ### Docker
 
-I created a [Dockerfile](Dockerfile], although I'm not sure how useful it will be to people. This might be useful for deploying in the cloud later.
+I created a [Dockerfile](Dockerfile), although I'm not sure how useful it will be to people. This might be useful for deploying in the cloud later.
 
 Here's how to build the docker file:
 
@@ -57,7 +57,7 @@ In Windows: Install Docker Desktop
 
 In WSL2/Ubuntu:
 
-```
+```bash
 sudo apt install docker.io
 git clone https://github.com/antlr/antlr4-lab.git
 cd antlr4-lab

@@ -682,6 +682,8 @@ function setupSelectInputTable(grammar) {
 	}
 }
 
+var grammars_v4 = [];
+
 function setupSelectGrammarTable() {
 	var grammars = "";
 	$.get("https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json")
@@ -711,6 +713,9 @@ function setupSelectGrammarTable() {
 			selectgrammar.options[i] = opt;
 			i = i + 1;
 		}
+		setupSelectInputTable(grammars_v4[0]);
+	})
+	.catch((error) => {
 	});
 }
 
@@ -797,5 +802,4 @@ $(document).ready(function() {
 
     setUpDragAndDrop();
     setupSelectGrammarTable();
-    setupSelectInputTable(grammars_v4[0]);
 });

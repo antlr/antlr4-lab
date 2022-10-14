@@ -586,14 +586,12 @@ function select_grammar(selectedValue){
 			$("#parsertab").addClass("tabs-header-selected");
 			$("#lexertab").removeClass("tabs-header-selected");
 		});
-		console.log("found = " + found.example[0]);
 		var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 		var trunc = found.parser.substring(prefix.length);
 		// remove parser grammar file name, assume that it's
 		// the root (which is wrong!).
 		var last = trunc.lastIndexOf("/");
 		var x = trunc.substring(0, last);
-		console.log("x = " + x);
 		var fname = prefix + x + "/examples/" + found.example[0];
 		$.get(fname).done(function(data){
 			$("#input").data("session").setValue(data);
@@ -641,14 +639,12 @@ function select_input(selectedValue){
 		{
 			// Set input.
 			var x = option.value;
-			console.log("x = " + x);
 			var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 			var trunc = found_grammar.parser.substring(prefix.length);
 			// remove parser grammar file name, assume that it's
 			// the root (which is wrong!).
 			var last = trunc.lastIndexOf("/");
 			var y = trunc.substring(0, last);
-			console.log("y = " + y);
 			var url = prefix + y + "/examples/" + x;
 			$.get(url).done(function(data){
 				$("#input").data("session").setValue(data);

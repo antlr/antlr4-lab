@@ -15,6 +15,8 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
@@ -100,6 +102,7 @@ public class ANTLRHttpServer {
 	public static void main(String[] args) throws Exception {
 		new File(IMAGES_DIR).mkdirs();
 
+		Files.createDirectories(Path.of("/var/log/antlrlab"));
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxThreads(10);
 		threadPool.setName("server");

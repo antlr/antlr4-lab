@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.tool.*;
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
+import static org.antlr.v4.server.ANTLRHttpServer.ParseServlet.LOGGER;
 import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;
@@ -21,6 +22,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GrammarProcessor {
     /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
@@ -150,7 +153,31 @@ public class GrammarProcessor {
 
     public static String toSVG(Tree t, List<String> ruleNames) throws IOException {
         Trees.writePS(t, ruleNames, Path.of(IMAGES_DIR, "temp.ps").toAbsolutePath().toString());
-        String[] results = execInDir(IMAGES_DIR, "ps2pdf", "temp.ps", "temp.pdf");
+        String ps = Files.readString(Path.of(IMAGES_DIR, "temp.ps"));
+
+        final String regex = "%%BoundingBox: [0-9]+ [0-9]+ ([0-9]+) ([0-9]+)";
+
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(ps);
+
+        int width;
+        int height;
+        if ( matcher.find()) {
+            width = Integer.valueOf(matcher.group(1));
+            height = Integer.valueOf(matcher.group(2));
+        }
+        else {
+            LOGGER.error("Didn't match regex Iin PS: "+regex);
+            width = 1000;
+            height = 1000;
+        }
+
+        String[] results =
+            execInDir(IMAGES_DIR, "ps2pdf",
+                      "-dDEVICEWIDTHPOINTS=" + width,
+                      "-dDEVICEHEIGHTPOINTS=" + height,
+                      "temp.ps", "temp.pdf");
+
         if (results[1].length() > 0) {
             System.err.println(results[1]);
         }

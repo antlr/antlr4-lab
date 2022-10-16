@@ -6,13 +6,10 @@ async function selectGrammar() {
     // Find.
     let name = $("#selectgrammar option:selected" ).text();
     let grammars = $("#selectgrammar").data("grammars")
-    const found = grammars.find(function(element)
-    {
-        return element.name == name;
-    });
+    const found = grammars.find((element) => { return element.name === name; });
     // Set grammar.
     if ( found && found.name!=="Sample" ) {
-        if (found.lexer != "") {
+        if (found.lexer !== "") {
             await axios.get(found.lexer).then(function (response) {
                 $("#grammar").data("lexerSession").setValue(response.data);
                 $("#grammar").data("editor").setSession($("#grammar").data("lexerSession")); // force redraw.
@@ -71,10 +68,7 @@ async function selectInput() {
     // Find grammar.
     let name = $("#selectgrammar option:selected" ).text();
     let grammars = $("#selectgrammar").data("grammars")
-    const found_grammar = grammars.find(function(element)
-    {
-        return element.name == name;
-    });
+    const found_grammar = grammars.find((element) => { return element.name === name; });
     // Find selected input.
     name = $("#selectinput option:selected" ).text();
     let select = $("#selectinput").get(0);
@@ -82,8 +76,7 @@ async function selectInput() {
     let found = false;
     for(j = L; j >= 0; j--) {
         let option = select.options[j];
-        if (option.selected)
-        {
+        if (option.selected) {
             // Set input.
             let x = option.value;
             let prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
@@ -100,17 +93,18 @@ async function selectInput() {
             found = true;
         }
     }
-    if (! found) return;
-    let session = $("#input").data("session");
-    session.setAnnotations(null);
-    removeAllMarkers(session);
-    let parserSession = $("#grammar").data("parserSession");
-    parserSession.setAnnotations(null);
-    removeAllMarkers(parserSession);
-    let lexerSession = $("#grammar").data("lexerSession");
-    lexerSession.setAnnotations(null);
-    removeAllMarkers(lexerSession);
-    $("#input").data("charToChunk", null);
+    if ( found ) {
+        let session = $("#input").data("session");
+        session.setAnnotations(null);
+        removeAllMarkers(session);
+        let parserSession = $("#grammar").data("parserSession");
+        parserSession.setAnnotations(null);
+        removeAllMarkers(parserSession);
+        let lexerSession = $("#grammar").data("lexerSession");
+        lexerSession.setAnnotations(null);
+        removeAllMarkers(lexerSession);
+        $("#input").data("charToChunk", null);
+    }
 }
 
 function setupInputDropDownForGrammar(grammar) {
@@ -135,8 +129,7 @@ function setupInputDropDownForGrammar(grammar) {
 
 function loadGrammarIndex(response) {
     let grammars = response.data;
-    grammars.sort(function(a, b)
-    {
+    grammars.sort(function(a, b) {
         let fa = a.name.toLowerCase(),
             fb = b.name.toLowerCase();
         if (fa < fb) {

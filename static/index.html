@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/grammars-v4.js"></script>
     <script src="js/antlr-client.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.10.1/ace.js" type="text/javascript" charset="utf-8"></script>
 </head>
@@ -46,10 +47,11 @@
 
     <div style="flex-grow: .3;"> <!-- expand a bit less than right pane -->
         <div class="tabs-header">
-            <span id="lexertab" class="tab-header">Lexer</span>
-            <span id="parsertab" class="tab-header">Parser</span>&nbsp;<img title="Enter your grammar here using ANTLR notation. Put combined grammars in the Parser tab and erase content from the Lexer tab.  Enter some input to the right and hit the Run button to test. Hover over red gutter annotation to see error messages." src="images/helpicon.png" width="13" align="center">
+	    <span id="lexertab" class="tab-header">Lexer</span>
+	    <span id="parsertab" class="tab-header">Parser</span>
+        &nbsp;<select class="dropdown" id="selectgrammar" size=1 onchange="selectGrammar()"></select>
+        &nbsp;<img title="Enter your grammar here using ANTLR notation or select one from the drop-down list (https://github.com/antlr/grammars-v4). Put combined grammars in the Parser tab and erase content from the Lexer tab.  Enter some input to the right and hit the Run button to test. Hover over red gutter annotation to see error messages." src="images/helpicon.png" width="13" align="center">
         </div>
-
         <div id="grammar" style="border: grey .5px solid;"></div>
     </div>
 
@@ -60,7 +62,9 @@
         <div style="display: flex; flex-direction: column;"> <!-- MAKE IT ALSO FLEX BUT VERTICALLY -->
             <!-- INPUT BOX -->
             <div style="flex-grow: 1">
-            <div class="chunk-header">Input <img title="Enter text that follows the syntax described in your grammar. Hit the Run button to test. Then move mouse over text to see how the tokens were matched. Hover over red gutter annotation to see error messages." src="images/helpicon.png" width="13" align="center">&nbsp;&nbsp;<span id="tokens"></span></div>
+            <div class="chunk-header">Input&nbsp;<span id="tokens"></span>
+                <select class="dropdown" id="selectinput" size=1 style="max-width:30%;" onchange="selectInput()"></select>
+                &nbsp;<img title="Enter text that follows the syntax described in your grammar or select sample input from the drop-down. Hit the Run button to test. Then move mouse over text to see how the tokens were matched. Hover over red gutter annotation to see error messages." src="images/helpicon.png" width="13" align="center">            </div>
             <div id="input" style="border: grey .5px solid;"></div>
             </div>
 

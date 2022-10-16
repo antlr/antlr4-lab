@@ -639,4 +639,5 @@ $(document).ready(function() {
     $("#parse_errors_header").hide();
 
     setUpDragAndDrop();
+    setupSelectGrammarTable();
 });

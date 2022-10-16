@@ -48,7 +48,7 @@
     <div style="flex-grow: .3;"> <!-- expand a bit less than right pane -->
         <div class="tabs-header">
 	    <span class="tabs-header">Grammar</span>&nbsp;<img title="Select a grammar with example input from https://github.com/antlr/grammars-v4 to load. Hit Run to test." src="images/helpicon.png" width="12" align="bottom">
-	    <select id="selectgrammar" size=1 onchange="select_grammar(this.value)">
+	    <select id="selectgrammar" size=1 onchange="selectGrammar()">
 	        <option value="Expr" selected>Expr</option>
 	    </select>
 	    <span id="lexertab" class="tab-header">Lexer</span>
@@ -66,7 +66,7 @@
             <div style="flex-grow: 1">
             <div class="chunk-header">Input <img title="Enter text that follows the syntax described in your grammar. Hit the Run button to test. Then move mouse over text to see how the tokens were matched. Hover over red gutter annotation to see error messages." src="images/helpicon.png" width="13" align="center">&nbsp;&nbsp;<span id="tokens"></span></div>
             </div>
-            <select id="selectinput" size=1 style="max-width:30%;" onchange="select_input(this.value)">
+            <select id="selectinput" size=1 style="max-width:30%;" onchange="selectInput()">
                <option value="expression" selected>expression</option>
             </select>
             <div id="input" style="border: grey .5px solid;"></div>

@@ -1,18 +1,17 @@
+"use strict";
+
 let GRAMMAR_INDEX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json"
 
-var grammars_v4 = []; // TODO remove
-
-
-function select_grammar(selectedValue){
+function selectGrammar() {
     // Find.
-    var name = $("#selectgrammar option:selected" ).text();
-    const found = grammars_v4.find(function(element)
+    let name = $("#selectgrammar option:selected" ).text();
+    let grammars = $("#selectgrammar").data("grammars")
+    const found = grammars.find(function(element)
     {
         return element.name == name;
     });
     // Set grammar.
-    if (found)
-    {
+    if ( found && found.name!=="Sample" ) {
         if (found.lexer != "") {
             $.get(found.lexer).done(function(data){
                 $("#grammar").data("lexerSession").setValue(data);
@@ -32,18 +31,18 @@ function select_grammar(selectedValue){
             $("#parsertab").addClass("tabs-header-selected");
             $("#lexertab").removeClass("tabs-header-selected");
         });
-        var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
-        var trunc = found.parser.substring(prefix.length);
+        let prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
+        let trunc = found.parser.substring(prefix.length);
         // remove parser grammar file name, assume that it's
         // the root (which is wrong!).
-        var last = trunc.lastIndexOf("/");
-        var x = trunc.substring(0, last);
-        var fname = prefix + x + "/examples/" + found.example[0];
+        let last = trunc.lastIndexOf("/");
+        let x = trunc.substring(0, last);
+        let fname = prefix + x + "/examples/" + found.example[0];
         $.get(fname).done(function(data){
             $("#input").data("session").setValue(data);
         });
         $("#start").text(found.start);
-        setupSelectInputTable(found);
+        setupInputDropDownForGrammar(found);
     }
     else {
         $("#grammar").data("lexerSession").setValue(SAMPLE_LEXER);
@@ -53,7 +52,7 @@ function select_grammar(selectedValue){
         $("#grammar").data("editor").setSession($("#grammar").data("parserSession")); // force redraw.
         $("#parsertab").addClass("tabs-header-selected");
         $("#lexertab").removeClass("tabs-header-selected");
-        setupSelectInputTable(grammars_v4[0]);
+        setupInputDropDownForGrammar(grammars[0]);
     }
     let session = $("#input").data("session");
     session.setAnnotations(null);
@@ -67,31 +66,32 @@ function select_grammar(selectedValue){
     $("#input").data("charToChunk", null);
 }
 
-function select_input(selectedValue){
+function selectInput() {
     // Find grammar.
-    var name = $("#selectgrammar option:selected" ).text();
-    const found_grammar = grammars_v4.find(function(element)
+    let name = $("#selectgrammar option:selected" ).text();
+    let grammars = $("#selectgrammar").data("grammars")
+    const found_grammar = grammars.find(function(element)
     {
         return element.name == name;
     });
     // Find selected input.
-    var name = $("#selectinput option:selected" ).text();
-    var select = $("#selectinput").get(0);
-    var j, L = select.options.length - 1;
-    var found = false;
+    name = $("#selectinput option:selected" ).text();
+    let select = $("#selectinput").get(0);
+    let j, L = select.options.length - 1;
+    let found = false;
     for(j = L; j >= 0; j--) {
-        var option = select.options[j];
+        let option = select.options[j];
         if (option.selected)
         {
             // Set input.
-            var x = option.value;
-            var prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
-            var trunc = found_grammar.parser.substring(prefix.length);
+            let x = option.value;
+            let prefix = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
+            let trunc = found_grammar.parser.substring(prefix.length);
             // remove parser grammar file name, assume that it's
             // the root (which is wrong!).
-            var last = trunc.lastIndexOf("/");
-            var y = trunc.substring(0, last);
-            var url = prefix + y + "/examples/" + x;
+            let last = trunc.lastIndexOf("/");
+            let y = trunc.substring(0, last);
+            let url = prefix + y + "/examples/" + x;
             $.get(url).done(function(data){
                 $("#input").data("session").setValue(data);
             });
@@ -112,26 +112,30 @@ function select_input(selectedValue){
     $("#input").data("charToChunk", null);
 }
 
-function setupSelectInputTable(grammar) {
-    var select = $("#selectinput").get(0);
+function setupInputDropDownForGrammar(grammar) {
+    let selectInput = $("#selectinput").get(0);
     // remove all previous entries in the "input" select control.
-    var j, L = select.options.length - 1;
+    let j, L = selectInput.options.length - 1;
     for(j = L; j >= 0; j--) {
-        select.remove(j);
+        selectInput.remove(j);
     }
-    select.selectedIndex = 0
-    var i = 0;
+    selectInput.selectedIndex = 0
+    if ( grammar==="Sample" ) {
+        selectInput.options[i] = new Option("sample", SAMPLE_INPUT);
+        return;
+    }
+    let i = 0;
     for (const e of grammar.example) {
-        var opt = new Option(e, e);
-        select.options[i] = opt;
-        i = i + 1;
+        let opt = new Option(e, e);
+        selectInput.options[i] = opt;
+        i++;
     }
 }
 
 function loadGrammarIndex(response) {
     console.log(response)
-    let g_before = response.data;
-    g_before.sort(function(a, b)
+    let grammars = response.data;
+    grammars.sort(function(a, b)
     {
         let fa = a.name.toLowerCase(),
             fb = b.name.toLowerCase();
@@ -143,19 +147,26 @@ function loadGrammarIndex(response) {
         }
         return 0;
     });
-    grammars_v4 = g_before;
-    let selectgrammar = $("#selectgrammar").get(0);
+    // Add default sample first
+    grammars.unshift({
+        name: "Sample",
+        lexer: "",
+        parser: "ExprParser.g4",
+        start: "program",
+        example: [
+            "sample.expr"
+        ]
+    })
+    $("#selectgrammar").data("grammars", grammars); // save grammar index in dropdown element
+    let selectGrammar = $("#selectgrammar").get(0);
     let i = 0;
     // Enter in hardwired "Expr" contained in this code.
-    let hw = new Option("Expr", "Expr");
-    selectgrammar.options[i] = hw;
-    ++i;
-    for (const g of grammars_v4) {
-        var opt = new Option(g.name, g.name);
-        selectgrammar.options[i] = opt;
-        i = i + 1;
+    for (const g of grammars) {
+        let opt = new Option(g.name, g.name);
+        selectGrammar.options[i] = opt;
+        i++;
     }
-    setupSelectInputTable(grammars_v4[0]);
+    setupInputDropDownForGrammar(grammars[0]);
 }
 
 async function setupSelectGrammarTable() {

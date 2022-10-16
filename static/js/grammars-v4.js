@@ -1,3 +1,8 @@
+let GRAMMAR_INDEX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json"
+
+var grammars_v4 = []; // TODO remove
+
+
 function select_grammar(selectedValue){
     // Find.
     var name = $("#selectgrammar option:selected" ).text();
@@ -123,39 +128,42 @@ function setupSelectInputTable(grammar) {
     }
 }
 
-var grammars_v4 = [];
+function loadGrammarIndex(response) {
+    console.log(response)
+    let g_before = response.data;
+    g_before.sort(function(a, b)
+    {
+        let fa = a.name.toLowerCase(),
+            fb = b.name.toLowerCase();
+        if (fa < fb) {
+            return -1;
+        }
+        if (fa > fb) {
+            return 1;
+        }
+        return 0;
+    });
+    grammars_v4 = g_before;
+    let selectgrammar = $("#selectgrammar").get(0);
+    let i = 0;
+    // Enter in hardwired "Expr" contained in this code.
+    let hw = new Option("Expr", "Expr");
+    selectgrammar.options[i] = hw;
+    ++i;
+    for (const g of grammars_v4) {
+        var opt = new Option(g.name, g.name);
+        selectgrammar.options[i] = opt;
+        i = i + 1;
+    }
+    setupSelectInputTable(grammars_v4[0]);
+}
 
-function setupSelectGrammarTable() {
-    var grammars = "";
-    $.get("https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json")
-        .done(function(data) {
-            var g_before = JSON.parse(data);
-            g_before.sort(function(a, b)
-            {
-                let fa = a.name.toLowerCase(),
-                    fb = b.name.toLowerCase();
-                if (fa < fb) {
-                    return -1;
-                }
-                if (fa > fb) {
-                    return 1;
-                }
-                return 0;
-            });
-            grammars_v4 = g_before;
-            var selectgrammar = $("#selectgrammar").get(0);
-            var i = 0;
-            // Enter in hardwired "Expr" contained in this code.
-            var hw = new Option("Expr", "Expr");
-            selectgrammar.options[i] = hw;
-            ++i;
-            for (const g of grammars_v4) {
-                var opt = new Option(g.name, g.name);
-                selectgrammar.options[i] = opt;
-                i = i + 1;
-            }
-            setupSelectInputTable(grammars_v4[0]);
-        })
+async function setupSelectGrammarTable() {
+    await axios.get(GRAMMAR_INDEX)
+        .then(loadGrammarIndex)
         .catch((error) => {
+            if( error.response ){
+                console.log(error.response.data); // => the response payload
+            }
         });
 }

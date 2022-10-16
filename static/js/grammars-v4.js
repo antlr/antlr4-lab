@@ -2,7 +2,7 @@
 
 let GRAMMAR_INDEX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/grammars.json"
 
-function selectGrammar() {
+async function selectGrammar() {
     // Find.
     let name = $("#selectgrammar option:selected" ).text();
     let grammars = $("#selectgrammar").data("grammars")
@@ -13,20 +13,21 @@ function selectGrammar() {
     // Set grammar.
     if ( found && found.name!=="Sample" ) {
         if (found.lexer != "") {
-            $.get(found.lexer).done(function(data){
-                $("#grammar").data("lexerSession").setValue(data);
+            await axios.get(found.lexer).then(function (response) {
+                $("#grammar").data("lexerSession").setValue(response.data);
                 $("#grammar").data("editor").setSession($("#grammar").data("lexerSession")); // force redraw.
                 $("#parsertab").removeClass("tabs-header-selected");
                 $("#lexertab").addClass("tabs-header-selected");
             });
-        } else {
+        }
+        else {
             $("#grammar").data("lexerSession").setValue("");
             $("#grammar").data("editor").setSession($("#grammar").data("lexerSession")); // force redraw.
             $("#parsertab").removeClass("tabs-header-selected");
             $("#lexertab").addClass("tabs-header-selected");
         }
-        $.get(found.parser).done(function(data){
-            $("#grammar").data("parserSession").setValue(data);
+        await axios.get(found.parser).then(function (response) {
+            $("#grammar").data("parserSession").setValue(response.data);
             $("#grammar").data("editor").setSession($("#grammar").data("parserSession")); // force redraw.
             $("#parsertab").addClass("tabs-header-selected");
             $("#lexertab").removeClass("tabs-header-selected");
@@ -38,8 +39,8 @@ function selectGrammar() {
         let last = trunc.lastIndexOf("/");
         let x = trunc.substring(0, last);
         let fname = prefix + x + "/examples/" + found.example[0];
-        $.get(fname).done(function(data){
-            $("#input").data("session").setValue(data);
+        await axios.get(fname).then(function (response) {
+            $("#input").data("session").setValue(response.data);
         });
         $("#start").text(found.start);
         setupInputDropDownForGrammar(found);
@@ -66,7 +67,7 @@ function selectGrammar() {
     $("#input").data("charToChunk", null);
 }
 
-function selectInput() {
+async function selectInput() {
     // Find grammar.
     let name = $("#selectgrammar option:selected" ).text();
     let grammars = $("#selectgrammar").data("grammars")
@@ -92,8 +93,8 @@ function selectInput() {
             let last = trunc.lastIndexOf("/");
             let y = trunc.substring(0, last);
             let url = prefix + y + "/examples/" + x;
-            $.get(url).done(function(data){
-                $("#input").data("session").setValue(data);
+            await axios.get(url).then(function (response) {
+                $("#input").data("session").setValue(response.data);
             });
             $("#start").text(found.start);
             found = true;
@@ -133,7 +134,6 @@ function setupInputDropDownForGrammar(grammar) {
 }
 
 function loadGrammarIndex(response) {
-    console.log(response)
     let grammars = response.data;
     grammars.sort(function(a, b)
     {

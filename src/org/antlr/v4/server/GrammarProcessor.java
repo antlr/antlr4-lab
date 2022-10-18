@@ -152,8 +152,12 @@ public class GrammarProcessor {
     }
 
     public static String toSVG(Tree t, List<String> ruleNames) throws IOException {
-        Trees.writePS(t, ruleNames, Path.of(IMAGES_DIR, "temp.ps").toAbsolutePath().toString());
-        String ps = Files.readString(Path.of(IMAGES_DIR, "temp.ps"));
+        long id = Thread.currentThread().getId();
+        String psFileName = "temp-"+id+".ps";
+        String pdfFileName = "temp-"+id+".pdf";
+        String svgFileName = "temp-"+id+".svg";
+        Trees.writePS(t, ruleNames, Path.of(IMAGES_DIR, psFileName).toAbsolutePath().toString());
+        String ps = Files.readString(Path.of(IMAGES_DIR, psFileName));
 
         final String regex = "%%BoundingBox: [0-9]+ [0-9]+ ([0-9]+) ([0-9]+)";
 
@@ -176,23 +180,18 @@ public class GrammarProcessor {
             execInDir(IMAGES_DIR, "ps2pdf",
                       "-dDEVICEWIDTHPOINTS=" + width,
                       "-dDEVICEHEIGHTPOINTS=" + height,
-                      "temp.ps", "temp.pdf");
+                    psFileName, pdfFileName);
 
         if (results[1].length() > 0) {
             System.err.println(results[1]);
         }
 
-        results = execInDir(IMAGES_DIR, "pdfcrop", "--hires", "temp.pdf"); // creates temp-crop.pdf
+        results = execInDir(IMAGES_DIR, "pdf2svg", pdfFileName, svgFileName);
         if (results[1].length() > 0) {
             System.err.println(results[1]);
         }
 
-        results = execInDir(IMAGES_DIR, "pdf2svg", "temp-crop.pdf", "temp.svg");
-        if (results[1].length() > 0) {
-            System.err.println(results[1]);
-        }
-
-        String svgfilename = Path.of(IMAGES_DIR, "temp.svg").toAbsolutePath().toString();
+        String svgfilename = Path.of(IMAGES_DIR, svgFileName).toAbsolutePath().toString();
         String svg = new String(Files.readAllBytes(Paths.get(svgfilename)));
         return svg;
     }

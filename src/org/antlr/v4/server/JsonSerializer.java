@@ -62,6 +62,7 @@ import static us.parr.lib.ParrtSys.execInDir;
  * 	      "stop": 1
  * 	    }
  * 	  ],
+ * 	  TODO: this isn't up to date
  * 	  "tree": {
  * 	    "0": [
  * 	      {
@@ -216,10 +217,10 @@ public class JsonSerializer {
      *  to integers, which refer to rules and tokens.
      */
     public static String toJSONTree(final Tree t) {
-        StringBuilder buf = new StringBuilder();
-        if ( t.getChildCount()==0 ) {
+        if ( !(t instanceof RuleContext) ) {
             return getJSONNodeText(t);
         }
+        StringBuilder buf = new StringBuilder();
         buf.append("{");
         buf.append(getJSONNodeText(t));
         buf.append(",\"kids\":[");

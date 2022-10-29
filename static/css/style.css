@@ -72,6 +72,11 @@
     opacity: .3;
 }
 
+.token_range_class {
+    position: absolute;
+    border-bottom: 2px solid grey;
+}
+
 .ace_gutter-cell {
     position: absolute;
     top: 0;

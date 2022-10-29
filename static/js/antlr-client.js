@@ -327,6 +327,7 @@ function mouseEventInsideInputText(session) {
         let pos = e.getDocumentPosition();
         let ci = session.doc.positionToIndex(pos)
         let charToChunk = $("#input").data("charToChunk");
+        let lastTokenRangeMarker = $("#input").data("lastTokenRangeMarker");
         if (charToChunk != null) {
             if (ci >= charToChunk.length) {
                 ci = charToChunk.length - 1;
@@ -339,6 +340,15 @@ function mouseEventInsideInputText(session) {
                 else {
                     $("#tokens").html('('+chunk.tooltip+')')
                 }
+                let a = session.doc.indexToPosition(chunk.start);
+                let b = session.doc.indexToPosition(chunk.stop);
+                var Range = ace.Range;
+                let r = new Range(a.row, a.column, b.row, b.column);
+                if ( lastTokenRangeMarker !== null ) {
+                    session.removeMarker(lastTokenRangeMarker);
+                }
+                lastTokenRangeMarker = session.addMarker(r, "token_range_class", "text");
+                $("#input").data("lastTokenRangeMarker", lastTokenRangeMarker);
             }
             // console.log(pos, ci, chunk);
         } else {
@@ -507,6 +517,8 @@ function createInputEditor() {
 
     $("#input").on('mouseleave', function() {
         $("#tokens").html("");
+        let lastTokenRangeMarker = $("#input").data("lastTokenRangeMarker")
+        session.removeMarker(lastTokenRangeMarker);
     });
 
     $("#input").keyup(function(e) {

@@ -12,7 +12,6 @@ sudo apt install -y openjdk-11-jre
 sudo apt install -y maven
 sudo apt install -y git
 sudo apt install -y ghostscript # gets ps2pdf
-sudo apt install -y texlive-extra-utils # gets pdfcrop
 sudo apt install -y pdf2svg
 git clone https://github.com/antlr/antlr4-lab.git
 cd antlr4-lab

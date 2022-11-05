@@ -39,11 +39,9 @@
     min-height:120px;
     font-family: 'Inconsolata', 'Menlo', monospace;
     font-size: 12px;
-    overflow: auto;
 }
 
 .drag-over {
-    /*border: 5px dashed lightgray !important;  !* override any border set by the style of the div element *!*/
     border: #94B6EB .5px dashed !important;
 }
 

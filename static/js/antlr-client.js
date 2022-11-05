@@ -521,6 +521,10 @@ function createInputEditor() {
         session.removeMarker(lastTokenRangeMarker);
     });
 
+    $("#input").on('mouseup', function() {
+        input.resize();
+    });
+
     $("#input").keyup(function(e) {
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
             session.setAnnotations(null);

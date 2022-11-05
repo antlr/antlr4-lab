@@ -172,14 +172,18 @@ function processANTLRResults(response) {
 
     session.setAnnotations(annotations);
 
-    let svgtree = result.svgtree;
     let tree = result.tree;
     let buf = ['<ul id="treeUL">'];
     walk(tree, result, I, buf);
     buf.push('</ul>');
-    let b64_svgtree = btoa(unescape(encodeURIComponent(svgtree)))
-    $("#svgtree").html("<img src='data:image/svg+xml;base64,"+b64_svgtree+"'></img>");
     $("#tree").html(buf.join('\n'))
+
+    let svgtree = result.svgtree;
+    if ( svgtree != null ) {
+        console.log(svgtree);
+        let b64_svgtree = btoa(unescape(encodeURIComponent(svgtree)))
+        $("#svgtree").html("<img src='data:image/svg+xml;base64," + b64_svgtree + "'></img>");
+    }
 
     initParseTreeView();
 

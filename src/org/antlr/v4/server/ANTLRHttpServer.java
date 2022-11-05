@@ -2,6 +2,7 @@ package org.antlr.v4.server;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -74,6 +75,9 @@ public class ANTLRHttpServer {
 				else {
 					try {
 						json = interp(grammar, lexGrammar, input, startRule);
+					}
+					catch (ParseCancellationException pce) {
+						json = "{\"exception_trace\":\"parser timeout ("+GrammarProcessor.MAX_PARSE_TIME_MS+"ms)\"}";
 					}
 					catch (Throwable e) {
 						e.printStackTrace(System.err);

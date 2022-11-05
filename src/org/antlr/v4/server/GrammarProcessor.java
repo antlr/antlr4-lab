@@ -5,14 +5,16 @@ import org.antlr.v4.Tool;
 import org.antlr.v4.gui.Interpreter;
 import org.antlr.v4.gui.Trees;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.DecisionInfo;
-import org.antlr.v4.runtime.atn.ParseInfo;
+import org.antlr.v4.runtime.atn.*;
+import org.antlr.v4.runtime.misc.IntegerList;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.tool.*;
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
 import static org.antlr.v4.server.ANTLRHttpServer.ParseServlet.LOGGER;
+import static org.antlr.v4.server.JsonSerializer.escapeJSONString;
 import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;
@@ -26,6 +28,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GrammarProcessor {
+    public static final int MAX_PARSE_TIME_MS = 20 * 1000; // 20 seconds
+
+    private static class KillableGrammarParserInterpreter extends GrammarParserInterpreter {
+        private final long creationTime = System.currentTimeMillis();
+
+        public KillableGrammarParserInterpreter(Grammar g, ATN deserializedATN, TokenStream tokenStream) {
+            super(g, deserializedATN, tokenStream);
+        }
+
+        @Override
+        protected void visitState(ATNState p) {
+            super.visitState(p);
+            long now = System.currentTimeMillis();
+            if ( now - creationTime > MAX_PARSE_TIME_MS ) {
+                throw new ParseCancellationException("Parser timeout ("+MAX_PARSE_TIME_MS+"ms)");
+            }
+        }
+    }
+
     /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
      *  with errors, tokens, rule names, and the parse tree.
      */
@@ -101,7 +122,7 @@ public class GrammarProcessor {
 
         tokens.fill();
 
-        GrammarParserInterpreter parser = g.createGrammarParserInterpreter(tokens);
+        KillableGrammarParserInterpreter parser = createGrammarParserInterpreter(g, tokens);
 
         CollectLexOrParseSyntaxErrors parseListener = new CollectLexOrParseSyntaxErrors();
         parser.removeErrorListeners();
@@ -111,6 +132,9 @@ public class GrammarProcessor {
         Rule r = g.rules.get(startRule);
         ParseTree t = parser.parse(r.index);
         ParseInfo parseInfo = parser.getParseInfo();
+
+        long now = System.currentTimeMillis();
+        System.err.println("PARSE TIME: "+(now - parser.creationTime)+"ms");
 
 //        System.out.println("lex msgs" + lexListener.msgs);
 //        System.out.println("parse msgs" + parseListener.msgs);
@@ -131,6 +155,19 @@ public class GrammarProcessor {
                 profileData);
         return json;
     }
+
+    /** Copy this function from {@link Grammar} so we can override {@link ParserInterpreter#visitState(ATNState)} */ 
+    public static KillableGrammarParserInterpreter createGrammarParserInterpreter(Grammar g, TokenStream tokenStream) {
+        if (g.isLexer()) {
+            throw new IllegalStateException("A parser interpreter can only be created for a parser or combined grammar.");
+        }
+        // must run ATN through serializer to set some state flags
+        IntegerList serialized = ATNSerializer.getSerialized(g.getATN());
+        ATN deserializedATN = new ATNDeserializer().deserialize(serialized.toArray());
+
+        return new KillableGrammarParserInterpreter(g, deserializedATN, tokenStream);
+    }
+
 
     private static String[][] getProfilerTable(GrammarParserInterpreter parser, ParseInfo parseInfo) {
         String[] ruleNamesByDecision = new String[parser.getATN().decisionToState.size()];
@@ -183,12 +220,21 @@ public class GrammarProcessor {
                     psFileName, pdfFileName);
 
         if (results[1].length() > 0) {
-            System.err.println(results[1]);
+            System.err.println("ps2pdf: "+results[1]);
+            String msg = results[1].strip();
+            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
+                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; ps2pdf says: "+escapeJSONString(msg)+"</text>\n" +
+                    "</svg>";
         }
 
         results = execInDir(IMAGES_DIR, "pdf2svg", pdfFileName, svgFileName);
         if (results[1].length() > 0) {
-            System.err.println(results[1]);
+            System.err.println("pdf2svg: "+results[1]);
+            String msg = results[1].strip();
+            return "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
+                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; pdf2svg says: "+escapeJSONString(msg)+"</text>\n" +
+                    "</svg>";
         }
 
         String svgfilename = Path.of(IMAGES_DIR, svgFileName).toAbsolutePath().toString();

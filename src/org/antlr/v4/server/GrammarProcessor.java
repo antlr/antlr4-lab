@@ -41,7 +41,8 @@ public class GrammarProcessor {
         protected void visitState(ATNState p) {
             super.visitState(p);
             long now = System.currentTimeMillis();
-            if ( now - creationTime > MAX_PARSE_TIME_MS ) {
+            long runTimeMs = now - creationTime;
+            if ( runTimeMs > MAX_PARSE_TIME_MS ) {
                 throw new ParseCancellationException("Parser timeout ("+MAX_PARSE_TIME_MS+"ms)");
             }
         }

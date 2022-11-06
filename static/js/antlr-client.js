@@ -57,8 +57,6 @@ let SAMPLE_INPUT =
 function processANTLRResults(response) {
     let parserSession = $("#grammar").data("parserSession")
     let lexerSession = $("#grammar").data("lexerSession")
-    let g = parserSession.getValue()
-    let lg = lexerSession.getValue();
     let session = $("#input").data("session");
     let I = session.getValue();
     let s = $('#start').text();
@@ -73,6 +71,11 @@ function processANTLRResults(response) {
         return;
     }
 
+    removeAllMarkers(parserSession);
+    parserSession.setAnnotations(null);
+    removeAllMarkers(lexerSession);
+    lexerSession.setAnnotations(null);
+
     let result = response.data.result;
     // console.log(result);
 
@@ -80,22 +83,21 @@ function processANTLRResults(response) {
         $("#tool_errors").html(`<span class="error">${response.data.arg_error}</span><br>`);
         $("#tool_errors").show();
         $("#tool_errors_header").show();
+        $("#parse_errors").hide();
+        $("#parse_errors_header").hide();
         return;
     }
 
-    if ( "exception" in response.data ) {
+    if ( "exception_trace" in response.data ) {
         $("#tool_errors").html(`<span class="error">${response.data.exception_trace}<br></span>`);
         $("#tool_errors").show();
         $("#tool_errors_header").show();
+        $("#parse_errors").hide();
+        $("#parse_errors_header").hide();
         return;
     }
 
     showToolErrors(response);
-
-    removeAllMarkers(parserSession);
-    parserSession.setAnnotations(null);
-    removeAllMarkers(lexerSession);
-    lexerSession.setAnnotations(null);
 
     let parser_grammar_errors = response.data.parser_grammar_errors;
     let lexer_grammar_errors = response.data.lexer_grammar_errors;

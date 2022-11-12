@@ -246,9 +246,9 @@ public class JsonSerializer {
         else if ( t instanceof ErrorNode) {
             Token symbol = ((TerminalNode)t).getSymbol();
             if (symbol != null) {
-                return "{\"error\":\"" + symbol.getText() + "\"}";
+                return "{\"error\":\"" + escapeJSONString(symbol.getText()) + "\"}";
             }
-            return "{\"error\":\""+t.getPayload().toString()+"\"}";
+            return "{\"error\":\"" + escapeJSONString(t.getPayload().toString()) + "\"}";
         }
         else if ( t instanceof TerminalNode) {
             Token symbol = ((TerminalNode)t).getSymbol();

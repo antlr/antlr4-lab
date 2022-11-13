@@ -5,13 +5,13 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import org.antlr.v4.server.ANTLRHttpServer;
-import org.antlr.v4.server.persistent.PersistentLayer;
+import org.antlr.v4.server.persistent.PersistenceLayer;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 
-public class CloudStoragePersistentLayer implements PersistentLayer<String> {
+public class CloudStoragePersistenceLayer implements PersistenceLayer<String> {
     static final ch.qos.logback.classic.Logger LOGGER =
             (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ANTLRHttpServer.class);
 

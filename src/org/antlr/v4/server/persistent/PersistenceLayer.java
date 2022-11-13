@@ -3,7 +3,7 @@ package org.antlr.v4.server.persistent;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 
-public interface PersistentLayer<K> {
+public interface PersistenceLayer<K> {
     /**
      * Persists a byte buffer in the underlying storage system.
      * @param buffer byte buffer

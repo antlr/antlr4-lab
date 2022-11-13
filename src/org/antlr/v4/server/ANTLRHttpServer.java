@@ -2,6 +2,10 @@ package org.antlr.v4.server;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.antlr.v4.server.persistent.PersistentLayer;
+import org.antlr.v4.server.persistent.cloudstorage.CloudStoragePersistentLayer;
+import org.antlr.v4.server.unique.DummyUniqueKeyGenerator;
+import org.antlr.v4.server.unique.UniqueKeyGenerator;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -16,8 +20,10 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
@@ -103,6 +109,50 @@ public class ANTLRHttpServer {
 		}
 	}
 
+	public static class ShareServlet extends DefaultServlet {
+		static final ch.qos.logback.classic.Logger LOGGER =
+				(ch.qos.logback.classic.Logger)LoggerFactory.getLogger(ANTLRHttpServer.class);
+
+		@Override
+		public void doPost(HttpServletRequest request, HttpServletResponse response)
+				throws IOException
+		{
+			String json;
+			try {
+				response.setContentType("text/plain;charset=utf-8");
+				response.setContentType("text/html;");
+				response.addHeader("Access-Control-Allow-Origin", "*");
+
+				JsonReader jsonReader = Json.createReader(request.getReader());
+				JsonObject jsonObj = jsonReader.readObject();
+
+
+				PersistentLayer<String> persistentLayer = new CloudStoragePersistentLayer();
+				UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
+				Optional<String> uniqueKey = keyGen.generateKey();
+				persistentLayer.persist(jsonObj.toString().getBytes(StandardCharsets.UTF_8),
+						uniqueKey.orElseThrow());
+
+				json = "{\"resource_id\":\""+uniqueKey.orElseThrow()+"\"}";
+			}
+			catch (Exception e) {
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				e.printStackTrace(pw);
+				String trace = JsonSerializer.escapeJSONString(sw.toString());
+				String msg = e.getMessage();
+				msg = JsonSerializer.escapeJSONString(msg);
+				json = "{\"exception_trace\":\""+trace+"\",\"exception\":\""+ msg +"\"}";
+
+			}
+			LOGGER.info("RESULT:\n"+json);
+			response.setStatus(HttpServletResponse.SC_OK);
+			PrintWriter w = response.getWriter();
+			w.write(json);
+			w.flush();
+		}
+	}
+
 	public static void main(String[] args) throws Exception {
 		new File(IMAGES_DIR).mkdirs();
 
@@ -123,6 +173,7 @@ public class ANTLRHttpServer {
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath("/");
 		context.addServlet(new ServletHolder(new ParseServlet()), "/parse/*");
+		context.addServlet(new ServletHolder(new ShareServlet()), "/share/*");
 
 		ServletHolder holderHome = new ServletHolder("static-home", DefaultServlet.class);
 		holderHome.setInitParameter("resourceBase", "static");

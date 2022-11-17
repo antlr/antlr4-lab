@@ -2,27 +2,34 @@ package org.antlr.v4.server;
 
 import org.antlr.v4.runtime.*;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
 class CollectLexOrParseSyntaxErrors extends BaseErrorListener {
-    List<String> msgs = new ArrayList<>();
+    JsonArrayBuilder msgs = Json.createArrayBuilder();
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
                             int line, int charPositionInLine,
                             String msg,
                             org.antlr.v4.runtime.RecognitionException e) {
-        msg = JsonSerializer.escapeJSONString(msg);
-        String err;
+        JsonObject err;
         if ( recognizer instanceof Lexer ) {
             int erridx = ((Lexer) recognizer)._input.index(); // where we detected error
             int startidx = erridx;
             if ( e instanceof LexerNoViableAltException ) {
                 startidx = ((LexerNoViableAltException)e).getStartIndex();
             }
-            err = String.format("{\"startidx\":%d,\"erridx\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                    startidx, erridx, line, charPositionInLine, msg);
+            err = Json.createObjectBuilder()
+                    .add("startidx", startidx)
+                    .add("erridx", erridx)
+                    .add("line", line)
+                    .add("pos", charPositionInLine)
+                    .add("msg", msg)
+                    .build();
         }
         else {
             Token startToken;
@@ -37,8 +44,13 @@ class CollectLexOrParseSyntaxErrors extends BaseErrorListener {
             else {
                 startToken = stopToken = e.getOffendingToken();
             }
-            err = String.format("{\"startidx\":%d,\"stopidx\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                    startToken.getTokenIndex(), stopToken.getTokenIndex(), line, charPositionInLine, msg);
+            err = Json.createObjectBuilder()
+                    .add("startidx", startToken.getTokenIndex())
+                    .add("stopidx", stopToken.getTokenIndex())
+                    .add("line", line)
+                    .add("pos", charPositionInLine)
+                    .add("msg", msg)
+                    .build();
         }
         msgs.add(err);
     }

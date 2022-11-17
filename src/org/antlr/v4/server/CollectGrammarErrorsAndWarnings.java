@@ -6,6 +6,8 @@ import org.antlr.v4.tool.ANTLRToolListener;
 import org.antlr.v4.tool.ErrorManager;
 import org.stringtemplate.v4.ST;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +16,8 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
 
     String fileName;
 
-    List<String> errors = new ArrayList<>();
-    List<String> warnings = new ArrayList<>();
+    List<JsonObject> errors = new ArrayList<>();
+    List<JsonObject> warnings = new ArrayList<>();
 
     public CollectGrammarErrorsAndWarnings(ErrorManager errMgr) {
         this.errMgr = errMgr;
@@ -38,13 +40,12 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
 
         // Strip "(126)" from "error(126): "
         outputMsg = outputMsg.replaceAll("error\\(.*?\\)", "error");
-        outputMsg = JsonSerializer.escapeJSONString(outputMsg);
-        String s = String.format("{\"type\":\"%s\",\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                msg.getErrorType().toString(),
-                msg.line,
-                msg.charPosition,
-                outputMsg);
-        errors.add(s);
+        errors.add(Json.createObjectBuilder()
+                           .add("type", msg.getErrorType().toString())
+                           .add("line", msg.line)
+                           .add("pos", msg.charPosition)
+                           .add("msg", outputMsg)
+                           .build());
     }
 
     @Override
@@ -59,12 +60,11 @@ class CollectGrammarErrorsAndWarnings implements ANTLRToolListener {
         }
 
         outputMsg = outputMsg.replaceAll("warning\\(.*?\\)", "warning");
-        outputMsg = JsonSerializer.escapeJSONString(outputMsg);
-        String s = String.format("{\"type\":\"%s\",\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                msg.getErrorType().toString(),
-                msg.line,
-                msg.charPosition,
-                outputMsg);
-        warnings.add(s);
+        errors.add(Json.createObjectBuilder()
+                           .add("type", msg.getErrorType().toString())
+                           .add("line", msg.line)
+                           .add("pos", msg.charPosition)
+                           .add("msg", outputMsg)
+                           .build());
     }
 }

@@ -1,20 +1,29 @@
 package org.antlr.v4.server;
 
+import org.antlr.v4.gui.Interpreter;
+import org.antlr.v4.gui.Trees;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.misc.Triple;
+import org.antlr.v4.runtime.misc.Utils;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
+import org.antlr.v4.tool.ANTLRMessage;
 
-import javax.json.*;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
+import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
 import static org.antlr.v4.server.GrammarProcessor.toSVG;
+import static us.parr.lib.ParrtSys.execInDir;
 
 // TODO: Ultimately this will go into the ANTLR core and then we can remove this class
 
@@ -99,7 +108,7 @@ public class JsonSerializer {
      * @param recog The parser that created the parse tree and is in the post-recognition state
      * @return JSON representing the parse tree
      */
-    public static JsonObjectBuilder toJSON(Tree t, Parser recog) throws IOException {
+    public static String toJSON(Tree t, Parser recog) throws IOException {
         String[] ruleNames = recog != null ? recog.getRuleNames() : null;
         if ( t==null || ruleNames==null ) {
             return null;
@@ -114,13 +123,13 @@ public class JsonSerializer {
      *  a printable parse tree: the rules, input, tokens, and the tree structure that refers to the rule
      *  and token indexes.  The tree and rule names are required but the token stream and input stream are optional.
      */
-    public static JsonObjectBuilder toJSON(Tree t,
+    public static String toJSON(Tree t,
                                 final List<String> ruleNames,
                                 final Vocabulary vocabulary,
                                 final TokenStream tokenStream,
                                 final CharStream inputStream,
-                                JsonArray lexMsgs,
-                                JsonArray parseMsgs,
+                                List<String> lexMsgs,
+                                List<String> parseMsgs,
                                 String[][] profileData)
         throws IOException
     {
@@ -128,107 +137,135 @@ public class JsonSerializer {
             return null;
         }
 
-        final JsonObjectBuilder rootObject = Json.createObjectBuilder();
-
-        rootObject.add("rules", Json.createArrayBuilder(ruleNames).build());
+        StringBuilder buf = new StringBuilder();
+        buf.append("{");
+        buf.append("\"rules\":[\"");
+        buf.append(String.join("\",\"", ruleNames));
+        buf.append("\"],");
 
         if ( inputStream!=null ) {
             Interval allchar = Interval.of(0, inputStream.size() - 1);
             String input = inputStream.getText(allchar);
-            rootObject.add("input", input);
+            input = JsonSerializer.escapeJSONString(input);
+            buf.append("\"input\":\"");
+            buf.append(input);
+            buf.append("\",");
         }
 
         if ( vocabulary!=null ) {
-            List<String> syms = new ArrayList<>(vocabulary.getMaxTokenType());
+            List<String> syms = new ArrayList<>();
+            buf.append("\"symbols\":[");
             for (int i = 0; i < vocabulary.getMaxTokenType(); i++) {
                 syms.add('"'+vocabulary.getSymbolicName(i)+'"');
             }
-            rootObject.add("symbols", Json.createArrayBuilder(syms).build());
+            buf.append(String.join(",", syms));
+            buf.append("],");
         }
 
         if ( tokenStream!=null ) {
-            final JsonArrayBuilder tokenArray = Json.createArrayBuilder();
+            List<String> tokenStrings = new ArrayList<>();
             for (int i = 0; i < tokenStream.size(); i++) {
                 Token tok = tokenStream.get(i);
-                tokenArray.add(Json.createObjectBuilder()
-                                   .add("type", tok.getType())
-                                   .add("line", tok.getLine())
-                                   .add("pos", tok.getCharPositionInLine())
-                                   .add("channel", tok.getChannel())
-                                   .add("start", tok.getStartIndex())
-                                   .add("stop", tok.getStopIndex()).build());
+                String s = String.format("{\"type\":%d,\"line\":%d,\"pos\":%d,\"channel\":%d,\"start\":%d,\"stop\":%d}",
+                        tok.getType(), tok.getLine(), tok.getCharPositionInLine(), tok.getChannel(),
+                        tok.getStartIndex(), tok.getStopIndex());
+                tokenStrings.add(s);
             }
-            rootObject.add("tokens", tokenArray.build());
+            buf.append("\"tokens\":[");
+            buf.append(String.join(",", tokenStrings));
+            buf.append("],");
         }
 
-        rootObject.add("svgtree", toSVG(t, ruleNames));
-        rootObject.add("tree", toJSONTree(t));
+        String svg = toSVG(t, ruleNames);
+        buf.append("\"svgtree\":\"");
+        buf.append(escapeJSONString(svg));
+        buf.append("\",");
 
-        rootObject.add("lex_errors", lexMsgs);
-        rootObject.add("parse_errors", parseMsgs);
+        String tree = toJSONTree(t);
+        buf.append("\"tree\":");
+        buf.append(tree);
+        buf.append(',');
 
-        final var dataArray = Json.createArrayBuilder();
-        for (String[] row : profileData) {
-            dataArray.add(Json.createArrayBuilder(Arrays.asList(row)).build());
+        String errs =
+                String.format("\"lex_errors\":[%s],\"parse_errors\":[%s]",
+                String.join(",", lexMsgs),
+                String.join(",", parseMsgs));
+        buf.append(errs);
+
+        buf.append(",\"profile\":{\"colnames\":[");
+        for (int i = 0; i < profilerColumnNames.length; i++) {
+            if ( i>0 ) buf.append(',');
+            buf.append(String.format("\"%s\"",profilerColumnNames[i]));
         }
-        rootObject.add("profile", Json.createObjectBuilder()
-                .add("colnames", Json.createArrayBuilder(Arrays.asList(profilerColumnNames)).build())
-                .add("data", dataArray.build()).build());
+        buf.append("],\"data\":[");
+        for (int i = 0; i < profileData.length; i++) {
+            String[] row = profileData[i];
+            if ( i>0 ) buf.append(',');
+            buf.append("[\"");
+            buf.append(String.join("\",\"",row));
+            buf.append("\"]");
+        }
 
-        return rootObject;
+        buf.append("]}");
+
+        buf.append("}");
+
+        return buf.toString();
     }
 
     /** Create a JSON representation of a parse tree. The tree is just a series of nested references
      *  to integers, which refer to rules and tokens.
      */
-    public static JsonValue toJSONTree(final Tree t) {
+    public static String toJSONTree(final Tree t) {
         if ( !(t instanceof RuleContext) ) {
             return getJSONNodeText(t);
         }
-
-        final JsonArrayBuilder kidsArray = Json.createArrayBuilder();
+        StringBuilder buf = new StringBuilder();
+        buf.append("{");
+        buf.append(getJSONNodeText(t));
+        buf.append(",\"kids\":[");
         for (int i = 0; i<t.getChildCount(); i++) {
-            kidsArray.add(toJSONTree(t.getChild(i)));
+            if ( i>0 ) buf.append(',');
+            buf.append(toJSONTree(t.getChild(i)));
         }
-
-        return Json.createObjectBuilder((JsonObject) getJSONNodeText(t))
-                .add("kids", kidsArray)
-                .build();
+        buf.append("]");
+        buf.append("}");
+        return buf.toString();
     }
 
     /** Create appropriate JSON text for a tree node */
-    public static JsonValue getJSONNodeText(Tree t) {
+    public static String getJSONNodeText(Tree t) {
         if ( t instanceof RuleContext) {
             int ruleIndex = ((RuleContext)t).getRuleContext().getRuleIndex();
             int altNumber = ((RuleContext) t).getAltNumber();
             if ( altNumber!= ATN.INVALID_ALT_NUMBER ) {
-                return Json.createObjectBuilder()
-                        .add("ruleidx", ruleIndex)
-                        .add("alt", altNumber)
-                        .build();
+                return String.format("\"ruleidx\":%d,\"alt\":%d",ruleIndex,altNumber);
             }
-            return Json.createObjectBuilder()
-                    .add("ruleidx", ruleIndex)
-                    .build();
+            return String.format("\"ruleidx\":%d",ruleIndex,altNumber);
         }
         else if ( t instanceof ErrorNode) {
             Token symbol = ((TerminalNode)t).getSymbol();
             if (symbol != null) {
-                return Json.createObjectBuilder()
-                        .add("error", symbol.getText())
-                        .build();
+                return "{\"error\":\"" + symbol.getText() + "\"}";
             }
-            return Json.createObjectBuilder()
-                    .add("error", t.getPayload().toString())
-                    .build();
+            return "{\"error\":\""+t.getPayload().toString()+"\"}";
         }
         else if ( t instanceof TerminalNode) {
             Token symbol = ((TerminalNode)t).getSymbol();
             if (symbol != null) {
-                return Json.createValue(symbol.getTokenIndex());
+                return String.valueOf(symbol.getTokenIndex());
             }
-            return Json.createValue("-1");
+            return "-1";
         }
-        return Json.createValue("<unknown node type>");
+        return "<unknown node type>";
+    }
+
+    public static String escapeJSONString(String s) {
+        s = s.replace("\\", "\\\\");
+        s = s.replace("\"", "\\\"");
+        s = s.replace("\n", "\\n");
+        s = s.replace("\r", "\\r");
+        s = s.replace("\t", "\\t");
+        return s;
     }
 }

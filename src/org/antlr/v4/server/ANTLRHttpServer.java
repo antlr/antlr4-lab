@@ -16,7 +16,9 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
 
-import javax.json.*;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,7 +38,7 @@ public class ANTLRHttpServer {
 		public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws IOException
 		{
-			JsonObjectBuilder json;
+			String json;
 			try {
 				response.setContentType("text/plain;charset=utf-8");
 				response.setContentType("text/html;");
@@ -65,27 +67,27 @@ public class ANTLRHttpServer {
 				LOGGER.info(logMsg.toString());
 
 				if (grammar.strip().length() == 0 && lexGrammar.strip().length() == 0) {
-					json = Json.createObjectBuilder().add("arg_error", "missing either combined grammar or lexer and parser both");
+					json = "{\"arg_error\":\"missing either combined grammar or lexer and parser both\"}";
 				}
 				else if (grammar.strip().length() == 0 && lexGrammar.strip().length() > 0) {
-					json = Json.createObjectBuilder().add("arg_error", "missing parser grammar");
+					json = "{\"arg_error\":\"missing parser grammar\"}";
 				}
 				else if (startRule.strip().length() == 0) {
-					json = Json.createObjectBuilder().add("arg_error", "missing start rule");
+					json = "{\"arg_error\":\"missing start rule\"}";
 				}
 				else if (input.length() == 0) {
-					json = Json.createObjectBuilder().add("arg_error", "missing input");
+					json = "{\"arg_error\":\"missing input\"}";
 				}
 				else {
 					try {
 						json = interp(grammar, lexGrammar, input, startRule);
 					}
 					catch (ParseCancellationException pce) {
-						json = Json.createObjectBuilder().add("exception_trace", "parser timeout ("+GrammarProcessor.MAX_PARSE_TIME_MS+"ms)");
+						json = "{\"exception_trace\":\"parser timeout ("+GrammarProcessor.MAX_PARSE_TIME_MS+"ms)\"}";
 					}
 					catch (Throwable e) {
 						e.printStackTrace(System.err);
-						json = Json.createObjectBuilder();
+						json = "{}";
 					}
 				}
 			}
@@ -93,16 +95,16 @@ public class ANTLRHttpServer {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				e.printStackTrace(pw);
-				json = Json.createObjectBuilder()
-						.add("exception_trace", sw.toString())
-						.add("exception", e.getMessage());
+				String trace = JsonSerializer.escapeJSONString(sw.toString());
+				String msg = e.getMessage();
+				msg = JsonSerializer.escapeJSONString(msg);
+				json = "{\"exception_trace\":\""+trace+"\",\"exception\":\""+ msg +"\"}";
 
 			}
 			LOGGER.info("RESULT:\n"+json);
 			response.setStatus(HttpServletResponse.SC_OK);
 			PrintWriter w = response.getWriter();
-			final JsonWriter jsonWriter = Json.createWriter(w);
-			jsonWriter.writeObject(json.build());
+			w.write(json);
 			w.flush();
 		}
 	}

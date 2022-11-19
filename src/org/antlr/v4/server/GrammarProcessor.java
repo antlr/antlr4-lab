@@ -1,5 +1,7 @@
 package org.antlr.v4.server;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.v4.Tool;
 import org.antlr.v4.gui.Interpreter;
@@ -11,17 +13,16 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.tool.*;
+
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
 import static org.antlr.v4.server.ANTLRHttpServer.ParseServlet.LOGGER;
-import static org.antlr.v4.server.JsonSerializer.escapeJSONString;
 import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -51,7 +52,7 @@ public class GrammarProcessor {
     /** Interpret the input according to the grammar, starting at the start rule, and return a JSON object
      *  with errors, tokens, rule names, and the parse tree.
      */
-    public static String interp(String grammar, String lexGrammar, String input, String startRule)
+    public static JsonObject interp(String grammar, String lexGrammar, String input, String startRule)
         throws IOException
     {
         startRule = startRule.strip();
@@ -62,7 +63,7 @@ public class GrammarProcessor {
         errMgr.setFormat("antlr");
         CollectGrammarErrorsAndWarnings parselistener = new CollectParserGrammarErrorsAndWarnings(errMgr);
         CollectGrammarErrorsAndWarnings lexlistener = new CollectLexerGrammarErrorsAndWarnings(errMgr);
-        List<String> warnings = new ArrayList<>();
+        final JsonArray warnings = new JsonArray();
         try {
             if ( lexGrammar!=null && lexGrammar.strip().length()>0 ) {
                 lg = new LexerGrammar(lexGrammar, lexlistener);
@@ -80,12 +81,14 @@ public class GrammarProcessor {
             System.err.println("Can't parse grammar");
         }
 
-        String result = "{}";
+        JsonObject result = new JsonObject();
 
         Rule r = g.rules.get(startRule);
         if (r == null) {
             String w = "No such start rule: " + startRule;
-            warnings.add("{\"msg\":\""+w+"\"}");
+            final JsonObject jsonError = new JsonObject();
+            jsonError.addProperty("msg", w);
+            warnings.add(jsonError);
             System.err.println(w);
         }
         else {
@@ -94,19 +97,15 @@ public class GrammarProcessor {
             }
         }
 
-        result = String.format("{\"warnings\":[%s],"+
-                        "\"parser_grammar_errors\":[%s]," +
-                        "\"lexer_grammar_errors\":[%s]," +
-                        "\"result\":%s}",
-                String.join(",", warnings),
-                String.join(",", parselistener.errors),
-                String.join(",", lexlistener.errors),
-                result);
-
-        return result;
+        final JsonObject jsonResponse = new JsonObject();
+        jsonResponse.add("warnings", warnings);
+        jsonResponse.add("parser_grammar_errors", parselistener.errors);
+        jsonResponse.add("lexer_grammar_errors", lexlistener.errors);
+        jsonResponse.add("result", result);
+        return jsonResponse;
     }
 
-    private static String parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input)
+    private static JsonObject parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input)
         throws IOException
     {
         CharStream charStream = CharStreams.fromStream(new StringBufferInputStream(input));
@@ -145,7 +144,7 @@ public class GrammarProcessor {
 
         TokenStream tokenStream = parser.getInputStream();
         CharStream inputStream = tokenStream.getTokenSource().getInputStream();
-        String json = JsonSerializer.toJSON(
+        return JsonSerializer.toJSON(
                 t,
                 Arrays.asList(parser.getRuleNames()),
                 parser.getVocabulary(),
@@ -154,7 +153,6 @@ public class GrammarProcessor {
                 lexListener.msgs,
                 parseListener.msgs,
                 profileData);
-        return json;
     }
 
     /** Copy this function from {@link Grammar} so we can override {@link ParserInterpreter#visitState(ATNState)} */ 
@@ -225,7 +223,7 @@ public class GrammarProcessor {
             String msg = results[1].strip();
             return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
-                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; ps2pdf says: "+escapeJSONString(msg)+"</text>\n" +
+                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; ps2pdf says: "+msg+"</text>\n" +
                     "</svg>";
         }
 
@@ -234,7 +232,7 @@ public class GrammarProcessor {
             System.err.println("pdf2svg: "+results[1]);
             String msg = results[1].strip();
             return "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
-                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; pdf2svg says: "+escapeJSONString(msg)+"</text>\n" +
+                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; pdf2svg says: "+msg+"</text>\n" +
                     "</svg>";
         }
 

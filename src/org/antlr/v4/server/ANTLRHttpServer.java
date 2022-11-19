@@ -1,5 +1,7 @@
 package org.antlr.v4.server;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.antlr.v4.server.persistent.PersistenceLayer;
@@ -17,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -38,14 +39,15 @@ public class ANTLRHttpServer {
 		public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws IOException
 		{
-			String json;
+
+			JsonObject jsonResponse = new JsonObject();
 			try {
 				response.setContentType("text/plain;charset=utf-8");
 				response.setContentType("text/html;");
 				response.addHeader("Access-Control-Allow-Origin", "*");
 
 				JsonReader jsonReader = Json.createReader(request.getReader());
-				JsonObject jsonObj = jsonReader.readObject();
+				javax.json.JsonObject jsonObj = jsonReader.readObject();
 //				System.out.println(jsonObj);
 
 				String grammar = jsonObj.getString("grammar", "");
@@ -67,27 +69,27 @@ public class ANTLRHttpServer {
 				LOGGER.info(logMsg.toString());
 
 				if (grammar.strip().length() == 0 && lexGrammar.strip().length() == 0) {
-					json = "{\"arg_error\":\"missing either combined grammar or lexer and parser both\"}";
+					jsonResponse.addProperty("arg_error", "missing either combined grammar or lexer and " +
+							"parser both");
 				}
 				else if (grammar.strip().length() == 0 && lexGrammar.strip().length() > 0) {
-					json = "{\"arg_error\":\"missing parser grammar\"}";
+					jsonResponse.addProperty("arg_error", "missing parser grammar");
 				}
 				else if (startRule.strip().length() == 0) {
-					json = "{\"arg_error\":\"missing start rule\"}";
+					jsonResponse.addProperty("arg_error", "missing start rule");
 				}
 				else if (input.length() == 0) {
-					json = "{\"arg_error\":\"missing input\"}";
+					jsonResponse.addProperty("arg_error", "missing input");
 				}
 				else {
 					try {
-						json = interp(grammar, lexGrammar, input, startRule);
+						jsonResponse = interp(grammar, lexGrammar, input, startRule);
 					}
 					catch (ParseCancellationException pce) {
-						json = "{\"exception_trace\":\"parser timeout ("+GrammarProcessor.MAX_PARSE_TIME_MS+"ms)\"}";
+						jsonResponse.addProperty("exception_trace", "parser timeout ("+GrammarProcessor.MAX_PARSE_TIME_MS+"ms)");
 					}
 					catch (Throwable e) {
 						e.printStackTrace(System.err);
-						json = "{}";
 					}
 				}
 			}
@@ -95,16 +97,13 @@ public class ANTLRHttpServer {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				e.printStackTrace(pw);
-				String trace = JsonSerializer.escapeJSONString(sw.toString());
-				String msg = e.getMessage();
-				msg = JsonSerializer.escapeJSONString(msg);
-				json = "{\"exception_trace\":\""+trace+"\",\"exception\":\""+ msg +"\"}";
-
+				jsonResponse.addProperty("exception_trace", sw.toString());
+				jsonResponse.addProperty("exception", e.getMessage());
 			}
-			LOGGER.info("RESULT:\n"+json);
+			LOGGER.info("RESULT:\n"+jsonResponse);
 			response.setStatus(HttpServletResponse.SC_OK);
 			PrintWriter w = response.getWriter();
-			w.write(json);
+			w.write(new Gson().toJson(jsonResponse));
 			w.flush();
 		}
 	}
@@ -117,14 +116,14 @@ public class ANTLRHttpServer {
 		public void doPost(HttpServletRequest request, HttpServletResponse response)
 				throws IOException
 		{
-			String json;
+			final JsonObject jsonResponse = new JsonObject();
 			try {
 				response.setContentType("text/plain;charset=utf-8");
 				response.setContentType("text/html;");
 				response.addHeader("Access-Control-Allow-Origin", "*");
 
 				JsonReader jsonReader = Json.createReader(request.getReader());
-				JsonObject jsonObj = jsonReader.readObject();
+				javax.json.JsonObject jsonObj = jsonReader.readObject();
 
 
 				PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
@@ -133,22 +132,20 @@ public class ANTLRHttpServer {
 				persistenceLayer.persist(jsonObj.toString().getBytes(StandardCharsets.UTF_8),
 						uniqueKey.orElseThrow());
 
-				json = "{\"resource_id\":\""+uniqueKey.orElseThrow()+"\"}";
+				jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());
 			}
 			catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				e.printStackTrace(pw);
-				String trace = JsonSerializer.escapeJSONString(sw.toString());
-				String msg = e.getMessage();
-				msg = JsonSerializer.escapeJSONString(msg);
-				json = "{\"exception_trace\":\""+trace+"\",\"exception\":\""+ msg +"\"}";
+				jsonResponse.addProperty("exception_trace", sw.toString());
+				jsonResponse.addProperty("exception", e.getMessage());
 
 			}
-			LOGGER.info("RESULT:\n"+json);
+			LOGGER.info("RESULT:\n"+jsonResponse);
 			response.setStatus(HttpServletResponse.SC_OK);
 			PrintWriter w = response.getWriter();
-			w.write(json);
+			w.write(new Gson().toJson(jsonResponse));
 			w.flush();
 		}
 	}

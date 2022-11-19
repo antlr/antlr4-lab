@@ -1,28 +1,29 @@
 package org.antlr.v4.server;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.antlr.v4.runtime.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 class CollectLexOrParseSyntaxErrors extends BaseErrorListener {
-    List<String> msgs = new ArrayList<>();
+    final JsonArray msgs = new JsonArray();
 
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
                             int line, int charPositionInLine,
                             String msg,
                             org.antlr.v4.runtime.RecognitionException e) {
-        msg = JsonSerializer.escapeJSONString(msg);
-        String err;
+        final JsonObject err = new JsonObject();
         if ( recognizer instanceof Lexer ) {
             int erridx = ((Lexer) recognizer)._input.index(); // where we detected error
             int startidx = erridx;
             if ( e instanceof LexerNoViableAltException ) {
                 startidx = ((LexerNoViableAltException)e).getStartIndex();
             }
-            err = String.format("{\"startidx\":%d,\"erridx\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                    startidx, erridx, line, charPositionInLine, msg);
+            err.addProperty("startidx", startidx);
+            err.addProperty("erridx", erridx);
+            err.addProperty("line", line);
+            err.addProperty("pos", charPositionInLine);
+            err.addProperty("msg", msg);
         }
         else {
             Token startToken;
@@ -37,8 +38,11 @@ class CollectLexOrParseSyntaxErrors extends BaseErrorListener {
             else {
                 startToken = stopToken = e.getOffendingToken();
             }
-            err = String.format("{\"startidx\":%d,\"stopidx\":%d,\"line\":%d,\"pos\":%d,\"msg\":\"%s\"}",
-                    startToken.getTokenIndex(), stopToken.getTokenIndex(), line, charPositionInLine, msg);
+            err.addProperty("startidx", startToken.getTokenIndex());
+            err.addProperty("stopidx", stopToken.getTokenIndex());
+            err.addProperty("line", line);
+            err.addProperty("pos", charPositionInLine);
+            err.addProperty("msg", msg);
         }
         msgs.add(err);
     }

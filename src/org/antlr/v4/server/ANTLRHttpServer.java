@@ -2,6 +2,8 @@ package org.antlr.v4.server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.antlr.v4.server.persistent.PersistenceLayer;
@@ -18,8 +20,7 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
 
-import javax.json.Json;
-import javax.json.JsonReader;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,14 +47,13 @@ public class ANTLRHttpServer {
 				response.setContentType("text/html;");
 				response.addHeader("Access-Control-Allow-Origin", "*");
 
-				JsonReader jsonReader = Json.createReader(request.getReader());
-				javax.json.JsonObject jsonObj = jsonReader.readObject();
+				JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
 //				System.out.println(jsonObj);
 
-				String grammar = jsonObj.getString("grammar", "");
-				String lexGrammar = jsonObj.getString("lexgrammar", ""); // can be null
-				String input = jsonObj.getString("input", "");
-				String startRule = jsonObj.getString("start", "");
+				String grammar = jsonObj.get("grammar").getAsString();
+				String lexGrammar = jsonObj.get("lexgrammar").getAsString(); // can be null
+				String input = jsonObj.get("input").getAsString();
+				String startRule = jsonObj.get("start").getAsString();
 
 				StringBuilder logMsg = new StringBuilder();
 				logMsg.append("GRAMMAR:\n");
@@ -122,14 +122,11 @@ public class ANTLRHttpServer {
 				response.setContentType("text/html;");
 				response.addHeader("Access-Control-Allow-Origin", "*");
 
-				JsonReader jsonReader = Json.createReader(request.getReader());
-				javax.json.JsonObject jsonObj = jsonReader.readObject();
-
-
+				JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
 				PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
 				UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
 				Optional<String> uniqueKey = keyGen.generateKey();
-				persistenceLayer.persist(jsonObj.toString().getBytes(StandardCharsets.UTF_8),
+				persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8),
 						uniqueKey.orElseThrow());
 
 				jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());

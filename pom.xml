@@ -58,11 +58,6 @@
             <version>4.3.4</version>
         </dependency>
         <dependency>
-			<groupId>org.glassfish</groupId>
-			<artifactId>javax.json</artifactId>
-			<version>1.1.4</version>
-		</dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>11.0.11</version>
@@ -96,6 +91,11 @@
 			<groupId>us.parr</groupId>
 			<artifactId>parrtlib</artifactId>
 			<version>0.5-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10</version>
 		</dependency>
 	</dependencies>
 	<build>

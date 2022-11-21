@@ -38,6 +38,9 @@ public class CloudStoragePersistenceLayer implements PersistenceLayer<String> {
 
     @Override
     public byte[] retrieve(String identifier) throws IOException, InvalidKeyException {
-        return new byte[0];
+        if ( identifier.equals("HASH") ) {
+            return "{\"fake\":999}".getBytes();
+        }
+        throw new InvalidKeyException("Invalid key");
     }
 }

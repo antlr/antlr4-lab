@@ -1,9 +1,19 @@
-package org.antlr.v4.server.persistent;
+package org.antlr.v4.server.persistence;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 
 public interface PersistenceLayer<K> {
+    static final LocalStorage local = new LocalStorage();
+    static final CloudStoragePersistenceLayer cloud = new CloudStoragePersistenceLayer();
+
+    public static PersistenceLayer newInstance(String where) {
+        switch (where) {
+            case "cloud" : return cloud;
+            default : return local;
+        }
+    }
+
     /**
      * Persists a byte buffer in the underlying storage system.
      * @param buffer byte buffer

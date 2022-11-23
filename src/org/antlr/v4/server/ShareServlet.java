@@ -5,8 +5,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.antlr.v4.server.persistent.PersistenceLayer;
-import org.antlr.v4.server.persistent.cloudstorage.CloudStoragePersistenceLayer;
+import org.antlr.v4.server.persistence.PersistenceLayer;
+import org.antlr.v4.server.persistence.CloudStoragePersistenceLayer;
 import org.antlr.v4.server.unique.DummyUniqueKeyGenerator;
 import org.antlr.v4.server.unique.UniqueKeyGenerator;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -17,6 +17,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+
+import static org.antlr.v4.server.ANTLRHttpServer.persistenceLayer;
 
 public class ShareServlet extends DefaultServlet {
     static final ch.qos.logback.classic.Logger LOGGER =
@@ -32,14 +34,14 @@ public class ShareServlet extends DefaultServlet {
             response.addHeader("Access-Control-Allow-Origin", "*");
 
             JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
-            PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
             UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
             Optional<String> uniqueKey = keyGen.generateKey();
-            persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8),
+            persistenceLayer.persist(new Gson().toJson(jsonObj).getBytes(StandardCharsets.UTF_8),
                     uniqueKey.orElseThrow());
 
-            jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());
-        } catch (Exception e) {
+            jsonResponse.addProperty("uuid", uniqueKey.orElseThrow());
+        }
+        catch (Exception e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);

@@ -1,8 +1,10 @@
 "use strict";
 
-let ANTLR_SERVICE = "/parse/";
+const ANTLR_SERVICE = "/parse/";
+const SAVE = "/share/";
+const LOAD = "/load/";
 
-let SAMPLE_PARSER =
+const SAMPLE_PARSER =
     "parser grammar ExprParser;\n" +
     "options { tokenVocab=ExprLexer; }\n" +
     "\n" +
@@ -28,7 +30,7 @@ let SAMPLE_PARSER =
     "\n" +
     "func : ID '(' expr (',' expr)* ')' ;"
 
-let SAMPLE_LEXER =
+const SAMPLE_LEXER =
     "// DELETE THIS CONTENT IF YOU PUT COMBINED GRAMMAR IN Parser TAB\n" +
     "lexer grammar ExprLexer;\n" +
     "\n" +
@@ -47,11 +49,13 @@ let SAMPLE_LEXER =
     "ID: [a-zA-Z_][a-zA-Z_0-9]* ;\n" +
     "WS: [ \\t\\n\\r\\f]+ -> skip ;";
 
-let SAMPLE_INPUT =
+const SAMPLE_INPUT =
     "f(x,y) {\n" +
     "    a = 3+foo;\n" +
     "    x and y;\n" +
     "}";
+
+const SAMPLE_START_RULE = "program"
 
 
 function processANTLRResults(response) {
@@ -239,6 +243,29 @@ async function run_antlr() {
         {grammar: g, lexgrammar: lg, input: I, start: s}
     )
         .then(processANTLRResults)
+        .catch((error) => {
+            if( error.response ){
+                console.log(error.response.data); // => the response payload
+            }
+        });
+}
+
+async function share_grammar() {
+    let parserSession = $("#grammar").data("parserSession")
+    let lexerSession = $("#grammar").data("lexerSession")
+    let g = parserSession.getValue()
+    let lg = lexerSession.getValue();
+    let I = $("#input").data("session").getValue();
+    let s = $('#start').text();
+
+    $("#profile_choice").show();
+
+    await axios.post(SAVE,
+        {grammar: g, lexgrammar: lg, input: I, start: s}
+    )
+        .then((response) => {
+            console.log("Shared as "+response.data.uuid)
+        })
         .catch((error) => {
             if( error.response ){
                 console.log(error.response.data); // => the response payload
@@ -461,8 +488,8 @@ function createAceANTLRMode() {
 }
 
 function createGrammarEditor() {
-    var parserSession = ace.createEditSession(SAMPLE_PARSER);
-    var lexerSession = ace.createEditSession(SAMPLE_LEXER);
+    var parserSession = ace.createEditSession(loadInitialParser());
+    var lexerSession = ace.createEditSession(loadInitialLexer());
     var editor = ace.edit("grammar");
 
     $("#grammar").data("parserSession", parserSession);
@@ -508,7 +535,7 @@ function removeAllMarkers(session) {
 
 function createInputEditor() {
     var input = ace.edit("input");
-    let session = ace.createEditSession(SAMPLE_INPUT);
+    let session = ace.createEditSession(loadInitialInput());
     $("#input").data("session", session);
     $("#input").data("editor", input);
     input.setSession(session);
@@ -625,8 +652,66 @@ function setUpDragAndDrop() {
     }
 }
 
+function loadInitialParser() {
+    const state = $("body").data("state")
+    if (state && state.grammar) {
+        return state.grammar;
+    }
+    return SAMPLE_PARSER;
+}
+
+function loadInitialLexer() {
+    const state = $("body").data("state")
+    if (state && state.lexgrammar) {
+        return state.lexgrammar;
+    }
+    return SAMPLE_LEXER;
+}
+
+function loadInitialInput() {
+    const state = $("body").data("state")
+    if (state && state.input) {
+        return state.input;
+    }
+    return SAMPLE_INPUT;
+}
+
+function loadInitialStartRule() {
+    const state = $("body").data("state")
+    if (state && state.start) {
+        return state.start;
+    }
+    return SAMPLE_START_RULE
+}
+
+async function loadState(uuid) {
+    $("body").data("uuid", uuid);
+    console.log("UUID: " + uuid);
+    await axios.get(LOAD+"?uuid="+uuid)
+        .then((response) => {
+            console.log("Loaded"+response.data)
+            $("body").data("state", response.data)
+            return response.data;
+        })
+        .catch((error) => {
+            if( error.response ){
+                console.log(error.response.data); // => the response payload
+            }
+        });
+}
+
 // MAIN
-$(document).ready(function() {
+$(document).ready(async function() {
+    // Remove any ?uuid=UUID arguments from the URL in browser window (messes up backup button)
+    const args = new URLSearchParams(window.location.search);
+    const uuid = args.get("uuid");
+    if (uuid) {
+        await loadState(uuid);
+        if (false) {
+            history.replaceState(null, null, "/");
+        }
+    }
+
     String.prototype.sliceReplace = function (start, end, repl) {
         return this.substring(0, start) + repl + this.substring(end);
     };
@@ -636,6 +721,7 @@ $(document).ready(function() {
     var editor = createGrammarEditor();
     setupGrammarTabs(editor);
     createInputEditor();
+    $("#start").html(loadInitialStartRule());
 
     setupTreeTabs();
 
@@ -662,7 +748,4 @@ $(document).ready(function() {
 
     setUpDragAndDrop();
     setupSelectGrammarTable();
-
-    // Remove any ?hash=UUID arguments from the URL in browser window (messes up backup button)
-    history.replaceState(null, null, "/");
 });

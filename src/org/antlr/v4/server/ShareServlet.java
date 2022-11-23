@@ -34,6 +34,7 @@ public class ShareServlet extends DefaultServlet {
             JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
             PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
             UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
+            // TODO: store jsonObj
             Optional<String> uniqueKey = keyGen.generateKey();
             persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8),
                     uniqueKey.orElseThrow());

@@ -24,18 +24,18 @@ public class LoadServlet extends DefaultServlet {
             String path = request.getPathInfo();
             String hash = path.substring(path.indexOf('/') + 1);
             PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
-            byte[] jsonBytes = persistenceLayer.retrieve(hash);
-            String json = new String(jsonBytes, StandardCharsets.UTF_8);
-            System.out.println(json);
+            if ( !persistenceLayer.exists(hash) ) {
+                LOGGER.info("Load: Unknown " + hash);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
 
+            LOGGER.info("Load: " + hash);
             Cookie hashCookie = new Cookie("resource_id", hash);
             hashCookie.setPath("/");
             hashCookie.setComment("__SAME_SITE_LAX__"); // Chrome apparently needs this or cookies disappear
             response.addCookie(hashCookie);
             response.sendRedirect("/index.html");
-        }
-        catch (InvalidKeyException ike) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
         catch (Exception e) {
             PrintWriter pw = response.getWriter();

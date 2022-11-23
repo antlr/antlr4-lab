@@ -662,4 +662,7 @@ $(document).ready(function() {
 
     setUpDragAndDrop();
     setupSelectGrammarTable();
+
+    // Remove any ?hash=UUID arguments from the URL in browser window (messes up backup button)
+    history.replaceState(null, null, "/");
 });

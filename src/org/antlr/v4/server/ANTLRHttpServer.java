@@ -27,12 +27,11 @@ public class ANTLRHttpServer {
 		@Override
 		protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 			String path = request.getPathInfo();
-			if ( path.length()== UUID_LEN+1 ) { // +1 for '/' on front
+			path = path.substring(1); // remove '/' on front
+			if ( path.length()== UUID_LEN ) {
 				System.out.printf("UUID "+path);
-				// Forward to the usual "/" ULR (index.html); doesn't change the URL in browser window
-				ServletContext context = request.getServletContext();
-				RequestDispatcher dispatcher = context.getRequestDispatcher(URIUtil.encodePath("/"));
-				dispatcher.forward(request, response);
+				// Redirect to the usual "/" ULR (index.html) with ?hash=UUID
+				response.sendRedirect("/?hash="+path);
 			}
 			else {
 				super.doGet(request, response);

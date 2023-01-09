@@ -27,7 +27,7 @@ git config --global user.name "Terence Parr"
 Launch!
 
 ```bash
-sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.1-SNAPSHOT/antlr4-lab-0.1-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
+sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.2-SNAPSHOT/antlr4-lab-0.2-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
 ```
 
 If you are running the server locally on your box, visit [http://localhost/index.html](http://localhost/index.html) to run the client.

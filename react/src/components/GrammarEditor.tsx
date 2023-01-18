@@ -1,9 +1,20 @@
 import React, {Component, createRef} from "react";
 import AceEditor from "react-ace";
 import CSS from "csstype";
-import {ButtonGroup, DropdownButton, ToggleButton} from "react-bootstrap";
+import {
+    Button,
+    ButtonGroup,
+    Dropdown,
+    Image,
+    OverlayTrigger, Popover,
+    ToggleButton
+} from "react-bootstrap";
 import GrammarSample from "../data/GrammarSample";
 import DropdownItem from "react-bootstrap/DropdownItem";
+import DropdownToggle from "react-bootstrap/DropdownToggle";
+import DropdownMenu from "react-bootstrap/DropdownMenu";
+// @ts-ignore
+import help from "../assets/helpicon.png";
 
 enum GrammarType {
     LEXER,
@@ -38,10 +49,31 @@ export default class GrammarEditor extends Component<IProps, IState> {
                 <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.LEXER} checked={this.state.grammarType===GrammarType.LEXER} onClick={e => this.toggleGrammarType(GrammarType.LEXER)}>Lexer</ToggleButton>
                 <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.PARSER} checked={this.state.grammarType===GrammarType.PARSER} onClick={e => this.toggleGrammarType(GrammarType.PARSER)}>Parser</ToggleButton>
             </ButtonGroup>
-            <DropdownButton className="grammar-selector" title={this.props.sample.name} as={ButtonGroup} variant="secondary" onSelect={(idx) => this.props.sampleSelected(this.props.samples[parseInt(idx)])}>
-                { this.props.samples.map((sample, idx) => <DropdownItem key={idx} eventKey={idx}>{sample.name}</DropdownItem>) }
-            </DropdownButton>
+            <Dropdown as={ButtonGroup} className="grammar-selector" onSelect={(idx) => this.props.sampleSelected(this.props.samples[parseInt(idx)])}>
+                <Button variant="secondary">{this.props.sample.name}</Button>
+                <DropdownToggle split variant="secondary" />
+                <DropdownMenu align="end">
+                    { this.props.samples.map((sample, idx) => <DropdownItem key={idx} eventKey={idx}>{sample.name}</DropdownItem>) }
+                </DropdownMenu>
+            </Dropdown>
+            <OverlayTrigger overlay={props => this.showHelp(props)} placement="bottom" >
+                <Image style={{width: "20px", height: "20px"}} src={help} alt="" />
+            </OverlayTrigger>
         </div>;
+    }
+
+    showHelp(props: { [props: string]: any }) {
+        return <Popover className="help-popover" {...props}>
+            <Popover.Body >
+            Enter your grammar here using ANTLR notation.<br/>
+            You can also drag and drop a .g4 file.<br/>
+            Or you can select a grammar from the drop-down list.<br/>
+            (the list is sourced from https://github.com/antlr/grammars-v4).<br/>
+            Put combined grammars in the Parser tab and erase content from the Lexer tab.<br/>
+            Hover over red gutter annotation to see error messages.<br/>
+            Enter some input to the right and hit the Run button to test.
+            </Popover.Body>
+        </Popover>;
     }
 
     toggleGrammarType(value: any) {

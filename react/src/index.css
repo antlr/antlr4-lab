@@ -47,6 +47,7 @@ code {
 .grammar-selector {
   padding: 1px;
   height: 30px;
+  min-width: 175px;
 }
 
 .grammar-selector > .btn {
@@ -54,6 +55,10 @@ code {
   font-size: 13px;
   font-weight: normal;
   padding: 3px 6px 3px 6px;
+}
+
+.grammar-selector > .dropdown-toggle-split {
+  max-width: 30px;
 }
 
 .grammar-selector > .dropdown-menu > a {
@@ -85,3 +90,6 @@ code {
   background-color: darkgray;
 }
 
+.help-popover {
+  max-width: 560px;
+}

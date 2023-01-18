@@ -32,8 +32,48 @@ code {
   padding: 0 2px 0 2px;
 }
 
-.calc-100-4 {
+.grammar-type {
+  padding: 1px;
+  height: 30px;
+}
+
+.grammar-type > .btn {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  padding: 3px 6px 3px 6px;
+}
+
+.grammar-selector {
+  padding: 1px;
+  height: 30px;
+}
+
+.grammar-selector > .btn {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  padding: 3px 6px 3px 6px;
+}
+
+.grammar-selector > .dropdown-menu > a {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.grammar-selector > .dropdown-menu {
+  max-height: 360px;
+  overflow-y: scroll;
+  padding: 0;
+}
+
+.calc-w-100-4 {
   width: calc(100% - 4px);
+}
+
+.calc-h-100-32 {
+  height: calc(100% - 32px);
 }
 
 .splitter {
@@ -44,3 +84,4 @@ code {
 .splitter:hover {
   background-color: darkgray;
 }
+

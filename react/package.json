@@ -8,6 +8,7 @@
     "@testing-library/user-event": "^13.2.1",
     "csstype": "^3.1.1",
     "react": "^18.2.0",
+    "react-ace": "^10.1.0",
     "react-bootstrap": "^2.7.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",

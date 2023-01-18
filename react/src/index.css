@@ -31,3 +31,16 @@ code {
   font-size: 12px;
   padding: 0 2px 0 2px;
 }
+
+.calc-100-4 {
+  width: calc(100% - 4px);
+}
+
+.splitter {
+  background-color: lightgray;
+  cursor: move;
+}
+
+.splitter:hover {
+  background-color: darkgray;
+}

@@ -1,8 +1,12 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import {Toast, ToastBody, ToastHeader} from "react-bootstrap";
+// @ts-ignore
 import logo from "../assets/antlrlogo.png";
 
-export default class Welcome extends Component {
+interface IProps { onClose: () => void }
+interface IState {}
+
+export default class Welcome extends Component<IProps, IState> {
 
     render() {
         return <Toast className="welcome" onClose={this.props.onClose}>

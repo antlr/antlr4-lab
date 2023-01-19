@@ -32,8 +32,7 @@ interface IState { grammarType: GrammarType }
 export default class GrammarEditor extends Component<IProps, IState> {
 
     editorRef: any;
-    lexerSession: Ace.EditSession;
-    parserSession: Ace.EditSession;
+    grammarSessions: Ace.EditSession[] = [ null, null ];
 
     constructor(props: IProps) {
         super(props);
@@ -51,9 +50,9 @@ export default class GrammarEditor extends Component<IProps, IState> {
 
     initializeEditor() {
         const antlrMode: Ace.SyntaxMode = new AntlrMode() as unknown as Ace.SyntaxMode;
-        this.lexerSession = createEditSession("", antlrMode);
-        this.parserSession = createEditSession("", antlrMode);
-        this.aceEditor.setSession(this.parserSession);
+        this.grammarSessions[GrammarType.LEXER] = createEditSession("", antlrMode);
+        this.grammarSessions[GrammarType.PARSER] = createEditSession("", antlrMode);
+        this.aceEditor.setSession(this.grammarSessions[GrammarType.PARSER]);
         this.aceEditor.setOptions({
             theme: 'ace/theme/chrome',
             "highlightActiveLine": false,
@@ -62,10 +61,6 @@ export default class GrammarEditor extends Component<IProps, IState> {
             "showGutter": true,
             "printMargin": false
         });
-    }
-
-    createAntlrMode() {
-
     }
 
     render() {
@@ -111,8 +106,7 @@ export default class GrammarEditor extends Component<IProps, IState> {
     }
 
     toggleGrammarType(value: any) {
-        // TODO toggle editor session
-        this.setState({grammarType: value as GrammarType});
+        this.setState({grammarType: value as GrammarType}, () => this.aceEditor.setSession(this.grammarSessions[value]));
     }
 
     renderEditor() {

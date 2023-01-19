@@ -19,6 +19,7 @@ import {IAceEditor} from "react-ace/lib/types";
 import { createEditSession, Ace } from "ace-builds";
 import AntlrMode from "../ace/AntlrMode";
 import "ace-builds/src-noconflict/theme-chrome";
+import {SAMPLE_LEXER, SAMPLE_PARSER} from "../data/Samples";
 
 
 enum GrammarType {
@@ -26,7 +27,7 @@ enum GrammarType {
     PARSER
 }
 
-interface IProps { samples: GrammarSample[]; sample: GrammarSample, sampleSelected: (sample: GrammarSample) => void }
+interface IProps { samples: GrammarSample[]; sample: GrammarSample; sampleSelected: (sample: GrammarSample) => void }
 interface IState { grammarType: GrammarType }
 
 export default class GrammarEditor extends Component<IProps, IState> {
@@ -40,8 +41,9 @@ export default class GrammarEditor extends Component<IProps, IState> {
         this.state = { grammarType: GrammarType.PARSER }
     }
 
-    componentDidMount() {
+   componentDidMount() {
         this.initializeEditor();
+        this.loadEditorWithGrammarSample(this.props.sample);
     }
 
     get aceEditor(): IAceEditor {
@@ -63,6 +65,58 @@ export default class GrammarEditor extends Component<IProps, IState> {
         });
     }
 
+    loadEditorWithGrammarSample(sample: GrammarSample) {
+        if(!sample)
+            return;
+        if(this.props.sample.name === "Sample" )
+            this.loadEditorWithBuiltInGrammarSample();
+        else
+            this.loadEditorWithRemoteGrammarSample(sample);
+        this.clearEditorExtras();
+    }
+
+    loadEditorWithBuiltInGrammarSample() {
+        this.grammarSessions[GrammarType.LEXER].setValue(SAMPLE_LEXER);
+        this.grammarSessions[GrammarType.PARSER].setValue(SAMPLE_PARSER);
+    }
+
+    loadEditorWithRemoteGrammarSample(sample: GrammarSample) {
+        if(sample.lexer) {
+            fetch(sample.lexer)
+                .then(async response => {
+                    const text = await response.text();
+                    this.grammarSessions[GrammarType.LEXER].setValue(text);
+                })
+                .catch(reason => console.log(reason));
+        } else
+            this.grammarSessions[GrammarType.LEXER].setValue("");
+        fetch(sample.parser)
+            .then(async response => {
+                const text = await response.text();
+                this.grammarSessions[GrammarType.PARSER].setValue(text);
+            })
+            .catch(reason => console.log(reason));
+    }
+
+    clearEditorExtras() {
+        this.grammarSessions.forEach(session => this.clearSessionExtras(session), this);
+    }
+
+    clearSessionExtras(session: Ace.EditSession) {
+        session.setAnnotations(null);
+        this.clearSessionMarkers(session);
+    }
+
+    clearSessionMarkers(session: Ace.EditSession) {
+        const markers = session.getMarkers();
+        if(markers) {
+            const keys = Object.keys(markers);
+            for(let key of keys)
+                // @ts-ignore
+                session.removeMarker(markers[key].id);
+        }
+    }
+
     render() {
         // @ts-ignore
         return <div className="h-100">
@@ -75,10 +129,12 @@ export default class GrammarEditor extends Component<IProps, IState> {
         const style: CSS.Properties = {height: "32px" };
         return <div style={style}>
             <ButtonGroup className="grammar-type">
-                <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.LEXER} checked={this.state.grammarType===GrammarType.LEXER} onClick={e => this.toggleGrammarType(GrammarType.LEXER)}>Lexer</ToggleButton>
-                <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.PARSER} checked={this.state.grammarType===GrammarType.PARSER} onClick={e => this.toggleGrammarType(GrammarType.PARSER)}>Parser</ToggleButton>
+                <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.LEXER} checked={this.state.grammarType===GrammarType.LEXER}
+                              onClick={e => this.toggleGrammarType(GrammarType.LEXER)}>Lexer</ToggleButton>
+                <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.PARSER} checked={this.state.grammarType===GrammarType.PARSER}
+                              onClick={e => this.toggleGrammarType(GrammarType.PARSER)}>Parser</ToggleButton>
             </ButtonGroup>
-            <Dropdown as={ButtonGroup} className="grammar-selector" onSelect={(idx) => this.props.sampleSelected(this.props.samples[parseInt(idx)])}>
+            <Dropdown as={ButtonGroup} className="grammar-selector" onSelect={(idx) => this.sampleSelected(this.props.samples[parseInt(idx)])}>
                 <Button variant="secondary">{this.props.sample.name}</Button>
                 <DropdownToggle split variant="secondary" />
                 <DropdownMenu align="end">
@@ -89,6 +145,12 @@ export default class GrammarEditor extends Component<IProps, IState> {
                 <Image style={{width: "20px", height: "20px"}} src={help} alt="" />
             </OverlayTrigger>
         </div>;
+    }
+
+    sampleSelected(sample: GrammarSample): void {
+        this.props.sampleSelected(sample);
+        this.loadEditorWithGrammarSample(sample);
+        this.toggleGrammarType(GrammarType.PARSER);
     }
 
     showHelp(props: { [props: string]: any }) {

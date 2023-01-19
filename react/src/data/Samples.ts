@@ -49,6 +49,6 @@ const SAMPLE_INPUT = `f(x,y) {
     x and y;
 }`
 
-const SAMPLE_GRAMMAR: GrammarSample = { name: "sample", lexer: "ExprLexer.g4", parser: "ExprParser.g4", start: "program", examples: [ "sample.expr" ] };
+const SAMPLE_GRAMMAR: GrammarSample = { name: "Sample", lexer: "ExprLexer.g4", parser: "ExprParser.g4", start: "program", examples: [ "sample.expr" ] };
 
 export { SAMPLE_GRAMMAR, SAMPLE_LEXER, SAMPLE_PARSER, SAMPLE_INPUT }

@@ -15,6 +15,11 @@ import DropdownToggle from "react-bootstrap/DropdownToggle";
 import DropdownMenu from "react-bootstrap/DropdownMenu";
 // @ts-ignore
 import help from "../assets/helpicon.png";
+import {IAceEditor} from "react-ace/lib/types";
+import { createEditSession, Ace } from "ace-builds";
+import AntlrMode from "../ace/AntlrMode";
+import "ace-builds/src-noconflict/theme-chrome";
+
 
 enum GrammarType {
     LEXER,
@@ -27,11 +32,40 @@ interface IState { grammarType: GrammarType }
 export default class GrammarEditor extends Component<IProps, IState> {
 
     editorRef: any;
+    lexerSession: Ace.EditSession;
+    parserSession: Ace.EditSession;
 
     constructor(props: IProps) {
         super(props);
         this.editorRef = createRef();
         this.state = { grammarType: GrammarType.PARSER }
+    }
+
+    componentDidMount() {
+        this.initializeEditor();
+    }
+
+    get aceEditor(): IAceEditor {
+        return (this.editorRef.current as AceEditor).editor;
+    }
+
+    initializeEditor() {
+        const antlrMode: Ace.SyntaxMode = new AntlrMode() as unknown as Ace.SyntaxMode;
+        this.lexerSession = createEditSession("", antlrMode);
+        this.parserSession = createEditSession("", antlrMode);
+        this.aceEditor.setSession(this.parserSession);
+        this.aceEditor.setOptions({
+            theme: 'ace/theme/chrome',
+            "highlightActiveLine": false,
+            "readOnly": false,
+            "showLineNumbers": true,
+            "showGutter": true,
+            "printMargin": false
+        });
+    }
+
+    createAntlrMode() {
+
     }
 
     render() {

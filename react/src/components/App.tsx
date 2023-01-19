@@ -4,7 +4,7 @@ import GrammarEditor from "./GrammarEditor";
 import InputStartRuleAndResults from "./InputStartRuleAndResults";
 import CSS from 'csstype';
 import GrammarSample from "../data/GrammarSample";
-import {fetchGrammarSamples} from "../data/SampleUtils";
+import {fetchGrammarSamples} from "../data/SamplesUtils";
 import {SAMPLE_GRAMMAR} from "../data/Samples";
 
 interface IProps {}

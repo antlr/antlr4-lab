@@ -44,33 +44,39 @@ code {
   padding: 3px 6px 3px 6px;
 }
 
-.grammar-selector {
+.selector {
   padding: 1px;
   height: 30px;
   min-width: 175px;
 }
 
-.grammar-selector > .btn {
+.selector > .btn {
   font-family: 'Arial', sans-serif;
   font-size: 13px;
   font-weight: normal;
   padding: 3px 6px 3px 6px;
 }
 
-.grammar-selector > .dropdown-toggle-split {
+.selector > .dropdown-toggle-split {
   max-width: 30px;
 }
 
-.grammar-selector > .dropdown-menu > a {
+.selector > .dropdown-menu > a {
   font-family: 'Arial', sans-serif;
   font-size: 13px;
   font-weight: normal;
 }
 
-.grammar-selector > .dropdown-menu {
+.selector > .dropdown-menu {
   max-height: 360px;
   overflow-y: scroll;
   padding: 0;
+}
+
+.selector-label {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
 }
 
 .calc-w-100-4 {

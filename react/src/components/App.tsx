@@ -30,7 +30,7 @@ export default class App extends Component<IProps, IState> {
                    </div>
                    <div className="h-100" style={rightStyle}>
                        { this.renderSplitter() }
-                       <InputStartRuleAndResults/>
+                       <InputStartRuleAndResults  sample={this.state.sample}/>
                    </div>
                 </div>
             { this.renderWelcome() }

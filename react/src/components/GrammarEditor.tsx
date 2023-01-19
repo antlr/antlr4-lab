@@ -134,7 +134,7 @@ export default class GrammarEditor extends Component<IProps, IState> {
                 <ToggleButton type="radio" variant="secondary" name="grammar-type" value={GrammarType.PARSER} checked={this.state.grammarType===GrammarType.PARSER}
                               onClick={e => this.toggleGrammarType(GrammarType.PARSER)}>Parser</ToggleButton>
             </ButtonGroup>
-            <Dropdown as={ButtonGroup} className="grammar-selector" onSelect={(idx) => this.sampleSelected(this.props.samples[parseInt(idx)])}>
+            <Dropdown as={ButtonGroup} className="selector" onSelect={(idx) => this.sampleSelected(this.props.samples[parseInt(idx)])}>
                 <Button variant="secondary">{this.props.sample.name}</Button>
                 <DropdownToggle split variant="secondary" />
                 <DropdownMenu align="end">

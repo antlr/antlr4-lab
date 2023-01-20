@@ -1,0 +1,47 @@
+.lexical_error_class {
+    position: absolute;
+    /*background-color: #D72D26;*/
+    background-color: #9A2E06;
+    opacity: .3;
+}
+
+.syntax_error_class {
+    position: absolute;
+    /*background-color: #D72D26;*/
+    background-color: #9A2E06;
+    opacity: .3;
+}
+
+.token_range_class {
+    position: absolute;
+    border-bottom: 2px solid grey;
+}
+
+.ace_gutter-cell {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    padding-left: 1px;
+    padding-right: 0px;
+    font-size: 9px;
+    color: #8C8C8C;
+}
+
+.ace_gutter-cell.ace_error {
+    background-image: none;
+    color: black;
+    border: .5px solid red;
+    transform: translateY(-7%);
+}
+
+.ace_gutter-layer {
+    background-color: white;
+    position: relative;
+    width: auto;
+    text-align: right;
+    pointer-events: auto;
+    height: 1000000px;
+    contain: style size layout;
+}

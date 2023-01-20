@@ -20,12 +20,11 @@ import { createEditSession, Ace } from "ace-builds";
 import AntlrMode from "../ace/AntlrMode";
 import "ace-builds/src-noconflict/theme-chrome";
 import {SAMPLE_LEXER, SAMPLE_PARSER} from "../data/Samples";
+import GrammarType from "../antlr/GrammarType";
+import AntlrResponse from "../antlr/AntlrResponse";
+import {clearSessionExtras} from "../ace/AceUtils";
 
 
-enum GrammarType {
-    LEXER,
-    PARSER
-}
 
 interface IProps { samples: GrammarSample[]; sample: GrammarSample; sampleSelected: (sample: GrammarSample) => void }
 interface IState { grammarType: GrammarType }
@@ -48,6 +47,10 @@ export default class GrammarEditor extends Component<IProps, IState> {
 
     get aceEditor(): IAceEditor {
         return (this.editorRef.current as AceEditor).editor;
+    }
+
+    grammar(grammarType: GrammarType): string {
+        return this.grammarSessions[grammarType].getValue();
     }
 
     initializeEditor() {
@@ -99,23 +102,9 @@ export default class GrammarEditor extends Component<IProps, IState> {
     }
 
     clearEditorExtras() {
-        this.grammarSessions.forEach(session => this.clearSessionExtras(session), this);
+        this.grammarSessions.forEach(session => clearSessionExtras(session), this);
     }
 
-    clearSessionExtras(session: Ace.EditSession) {
-        session.setAnnotations(null);
-        this.clearSessionMarkers(session);
-    }
-
-    clearSessionMarkers(session: Ace.EditSession) {
-        const markers = session.getMarkers();
-        if(markers) {
-            const keys = Object.keys(markers);
-            for(let key of keys)
-                // @ts-ignore
-                session.removeMarker(markers[key].id);
-        }
-    }
 
     render() {
         // @ts-ignore
@@ -176,5 +165,9 @@ export default class GrammarEditor extends Component<IProps, IState> {
         return <div className="calc-h-100-32" style={style}>
             <AceEditor ref={this.editorRef} width="100%" height="100%" mode="text" editorProps={{$blockScrolling: Infinity}} />
         </div>;
+    }
+
+    processResponse(response: AntlrResponse) {
+
     }
 }

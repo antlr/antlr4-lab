@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './components/App';
+import './index.css';
+import './ace.css';
 
 const domRoot = document.getElementById('root');
 domRoot.style.width = "100vw";

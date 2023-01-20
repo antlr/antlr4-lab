@@ -1,4 +1,4 @@
-import React, {Component, DragEvent} from "react";
+import React, {Component, createRef, DragEvent} from "react";
 import Welcome from "./Welcome";
 import GrammarEditor from "./GrammarEditor";
 import InputStartRuleAndResults from "./InputStartRuleAndResults";
@@ -6,14 +6,24 @@ import CSS from 'csstype';
 import GrammarSample from "../data/GrammarSample";
 import {fetchGrammarSamples} from "../data/SamplesUtils";
 import {SAMPLE_GRAMMAR} from "../data/Samples";
+import AntlrInput from "../antlr/AntlrInput";
+import GrammarType from "../antlr/GrammarType";
+import AntlrResponse from "../antlr/AntlrResponse";
+
+const ANTLR_SERVICE = "/parse/";
 
 interface IProps {}
 interface IState { showWelcome: boolean; editorWidth: number, samples: GrammarSample[], sample: GrammarSample }
 
 export default class App extends Component<IProps, IState> {
 
+    grammarEditorRef: any;
+    inputEditorRef: any;
+
     constructor(props: IProps) {
         super(props);
+        this.grammarEditorRef = createRef();
+        this.inputEditorRef = createRef();
         this.state = { showWelcome: false, editorWidth: 50, samples: [ SAMPLE_GRAMMAR ], sample: SAMPLE_GRAMMAR };
     }
 
@@ -24,17 +34,34 @@ export default class App extends Component<IProps, IState> {
     render() {
         const leftStyle: CSS.Properties = { width: "" + this.state.editorWidth + "%", float: "left", padding: 0 };
         const rightStyle: CSS.Properties = { width: "" + (100 - this.state.editorWidth) + "%", float: "left", padding: 0 };
-        return <><div className="h-100 w-100">
+        return <>
+                <div className="h-100 w-100">
                    <div className="h-100" style={leftStyle}>
-                       <GrammarEditor samples={this.state.samples} sample={this.state.sample} sampleSelected={sample => this.setState({sample: sample})}/>
+                       <GrammarEditor ref={this.grammarEditorRef} samples={this.state.samples} sample={this.state.sample} sampleSelected={sample => this.setState({sample: sample})}/>
                    </div>
                    <div className="h-100" style={rightStyle}>
                        { this.renderSplitter() }
-                       <InputStartRuleAndResults  sample={this.state.sample}/>
+                       <InputStartRuleAndResults ref={this.inputEditorRef} sample={this.state.sample} onRun={this.runAntlr.bind(this)}/>
                    </div>
                 </div>
-            { this.renderWelcome() }
+                { this.renderWelcome() }
             </>;
+    }
+
+    runAntlr(input: AntlrInput) {
+        const grammarEditor: GrammarEditor = this.grammarEditorRef.current;
+        input.lexgrammar = grammarEditor.grammar(GrammarType.LEXER);
+        input.grammar = grammarEditor.grammar(GrammarType.PARSER);
+        const url = document.URL.indexOf("localhost")>=0 ? "http://localhost" + ANTLR_SERVICE : ANTLR_SERVICE;
+        fetch(url, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json"}, body: JSON.stringify(input)})
+            .then(async resp => {
+                const json = await resp.json();
+                const response = json as AntlrResponse;
+                grammarEditor.processResponse(response);
+                const inputEditor: InputStartRuleAndResults = this.inputEditorRef.current;
+                inputEditor.processResponse(response);
+            })
+            .catch(reason => console.log(reason));
     }
 
     renderWelcome() {

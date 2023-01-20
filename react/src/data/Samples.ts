@@ -27,7 +27,7 @@ expr: ID
 func : ID '(' expr (',' expr)* ')' ;`;
 
 const SAMPLE_LEXER = `// DELETE THIS CONTENT IF YOU PUT COMBINED GRAMMAR IN Parser TAB
-lexer grammar ExprLexer;\n" +
+lexer grammar ExprLexer;
 
 AND : 'and' ;
 OR : 'or' ;

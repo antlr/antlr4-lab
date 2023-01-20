@@ -111,3 +111,69 @@ code {
   width: calc(100% - 10px);
   resize: vertical;
 }
+
+.run-label-box {
+  max-width: 150px;
+}
+
+.run-label-box > h6 {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  height: 18px;
+}
+
+.run-button-box {
+  margin-top: 4px;
+  margin-left: 6px;
+}
+
+.start-rule-input {
+  margin-right: 8px;
+  max-width: 200px;
+  padding: 2px;
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  float: left;
+}
+
+.run-button-box > .run-button {
+  float: left;
+  margin-top: 2px;
+  margin-right: 40px;
+}
+
+.profiler-switch {
+  padding-top: 3px;
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.chunk-header {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  color: #404040;
+  font-weight: normal;
+  padding-bottom: .5em;
+  margin-top: 10px;
+  margin-left: 6px;
+}
+
+.console {
+  border: solid .5px #7F7F7F;
+  font-family: 'Inconsolata', 'Menlo', monospace;
+  font-size: 12px;
+  color: #404040;
+  padding: 3px;
+  overflow: auto;
+  padding-inline-start: 0;
+  margin-left: 6px;
+  width: calc(100% - 12px);
+  margin-top: -4px;
+}
+
+.error-message {
+  color: #905857;
+}

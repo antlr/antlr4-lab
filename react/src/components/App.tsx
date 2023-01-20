@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, DragEvent} from "react";
 import Welcome from "./Welcome";
 import GrammarEditor from "./GrammarEditor";
 import InputStartRuleAndResults from "./InputStartRuleAndResults";
@@ -45,15 +45,33 @@ export default class App extends Component<IProps, IState> {
     }
 
     renderSplitter() {
-        return <div draggable={true} className="h-100 splitter" style={{width: "4px", float: "left"}} onDrag={(e)=>this.updateEditorWidth(e.currentTarget.offsetLeft, e.clientX)}/>;
+        return <div draggable={true} className="h-100 splitter" style={{width: "4px", float: "left"}}
+                    onDragStart={e => this.preventAnimation()}
+                    onDragEnd={e => this.unpreventAnimation()}
+                    onDrag={(e)=>this.updateEditorWidth(e)}
+                    />;
     }
 
-    updateEditorWidth(current: number, proposed: number) {
-        if(proposed <= 0)
-            return;
-        const totalWidth = current * (100 / this.state.editorWidth);
-        const editorWidth = proposed / totalWidth;
-        this.setState({editorWidth: editorWidth * 100});
+    static preventDefault(event: Event) {
+        event.preventDefault()
+    }
+
+    preventAnimation() {
+        document.addEventListener('dragover', App.preventDefault );
+    }
+
+    unpreventAnimation() {
+        document.removeEventListener('dragover', App.preventDefault );
+    }
+
+    updateEditorWidth(event: DragEvent<HTMLDivElement>) {
+        const currentWidth = event.currentTarget.offsetLeft;
+        const proposedWidth = event.clientX;
+        if(proposedWidth > 0) {
+            const totalWidth = currentWidth * (100 / this.state.editorWidth);
+            const editorWidth = proposedWidth / totalWidth;
+            this.setState({editorWidth: editorWidth * 100});
+        }
     }
 
 }

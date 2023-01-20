@@ -83,6 +83,10 @@ code {
   width: calc(100% - 4px);
 }
 
+.calc-w-100-16 {
+  width: calc(100% - 16px);
+}
+
 .calc-h-100-32 {
   height: calc(100% - 32px);
 }
@@ -98,4 +102,12 @@ code {
 
 .help-popover {
   max-width: 560px;
+}
+
+.input-editor {
+  border: grey .5px solid;
+  position: relative;
+  left: 2px;
+  width: calc(100% - 10px);
+  resize: vertical;
 }

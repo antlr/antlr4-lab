@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, createRef} from "react";
 import GrammarSample from "../data/GrammarSample";
 import CSS from "csstype";
 import {Button, ButtonGroup, Dropdown, FormLabel, Image, OverlayTrigger, Popover} from "react-bootstrap";
@@ -7,24 +7,65 @@ import DropdownMenu from "react-bootstrap/DropdownMenu";
 import DropdownItem from "react-bootstrap/DropdownItem";
 // @ts-ignore
 import help from "../assets/helpicon.png";
+import AceEditor from "react-ace";
+import {IAceEditor} from "react-ace/lib/types";
+import "ace-builds/src-noconflict/theme-chrome";
+import {SAMPLE_INPUT} from "../data/Samples";
 
 interface IProps { sample: GrammarSample }
-interface IState { sample: GrammarSample, exampleName: string }
+interface IState { exampleName: string }
 
-// const EXAMPLE_PREFIX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
+const EXAMPLE_PREFIX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 
 export default class InputStartRuleAndResults extends Component<IProps, IState> {
 
+    editorRef: any;
+
     constructor(props: IProps) {
         super(props);
-        this.state = { sample: this.props.sample, exampleName: this.props.sample.examples[0] };
+        this.editorRef = createRef();
+        this.state = { exampleName: this.props.sample.examples[0] };
     }
 
-    static getDerivedStateFromProps(props: IProps, state: IState): IState {
-        if(props.sample !== state.sample) {
-            return { sample: props.sample, exampleName: props.sample.examples[0] };
-        } else
-            return null;
+    componentDidMount() {
+        this.initializeEditor();
+        this.loadEditorWithInputSample();
+    }
+
+    get aceEditor(): IAceEditor {
+        return (this.editorRef.current as AceEditor).editor;
+    }
+
+    initializeEditor() {
+        this.aceEditor.setOptions({
+            theme: 'ace/theme/chrome',
+            "highlightActiveLine": false,
+            "readOnly": false,
+            "showLineNumbers": true,
+            "showGutter": true,
+            "printMargin": false
+        });
+    }
+
+    loadEditorWithInputSample() {
+        if(this.props.sample.name === "Sample")
+            this.aceEditor.getSession().setValue(SAMPLE_INPUT);
+        else {
+            let url = this.props.sample.parser.substring(0, this.props.sample.parser.lastIndexOf("/"));
+            url += "/examples/" + this.state.exampleName;
+            fetch(url)
+                .then(async response => {
+                    const text = await response.text();
+                    this.aceEditor.getSession().setValue(text);
+                })
+                .catch(reason => console.log(reason));
+        }
+    }
+
+    componentDidUpdate(prevProps: Readonly<IProps>, prevState: Readonly<IState>, snapshot?: any) {
+        if(this.props.sample !== prevProps.sample) {
+            this.setState({ exampleName: this.props.sample.examples[0] }, () => this.loadEditorWithInputSample());
+        }
     }
 
     render() {
@@ -55,7 +96,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     inputSelected(example: string) {
-
+        this.setState({ exampleName: example }, () => this.loadEditorWithInputSample());
     }
 
     showHelp(props: { [props: string]: any }) {
@@ -72,7 +113,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     renderEditor() {
-        return <div/>;
+        return <AceEditor className="input-editor" ref={this.editorRef} width="calc(100%-10px)" height="300px" mode="text" editorProps={{$blockScrolling: Infinity}} />;
     }
 
     renderConsole() {

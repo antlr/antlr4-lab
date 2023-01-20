@@ -14,8 +14,10 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,6 @@ public class ANTLRHttpServer {
 			try {
 				response.setContentType("text/plain;charset=utf-8");
 				response.setContentType("text/html;");
-				response.addHeader("Access-Control-Allow-Origin", "*");
 
 				JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
 //				System.out.println(jsonObj);
@@ -120,7 +121,6 @@ public class ANTLRHttpServer {
 			try {
 				response.setContentType("text/plain;charset=utf-8");
 				response.setContentType("text/html;");
-				response.addHeader("Access-Control-Allow-Origin", "*");
 
 				JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
 				PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
@@ -174,6 +174,11 @@ public class ANTLRHttpServer {
 		holderHome.setInitParameter("dirAllowed","true");
 		holderHome.setInitParameter("pathInfoOnly","true");
 		context.addServlet(holderHome,"/*");
+
+		FilterHolder filter = new FilterHolder(CrossOriginFilter.class);
+		filter.setInitParameter("allowedMethods", "POST, OPTIONS");
+		filter.setInitParameter("allowedOrigins", "*");
+		context.addFilter(filter, "/*", null);
 
 		server.setHandler(context);
 

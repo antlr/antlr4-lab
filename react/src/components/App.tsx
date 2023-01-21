@@ -24,7 +24,7 @@ export default class App extends Component<IProps, IState> {
         super(props);
         this.grammarEditorRef = createRef();
         this.inputEditorRef = createRef();
-        this.state = { showWelcome: false, editorWidth: 50, samples: [ SAMPLE_GRAMMAR ], sample: SAMPLE_GRAMMAR };
+        this.state = { showWelcome: true, editorWidth: 50, samples: [ SAMPLE_GRAMMAR ], sample: SAMPLE_GRAMMAR };
     }
 
     componentDidMount() {

@@ -30,9 +30,10 @@ import {Ace, Range} from "ace-builds";
 import AntlrToken from "../antlr/AntlrToken";
 import TreeView from "./TreeView";
 import HierarchyView from "./HierarchyView";
+import ProfilerView from "./ProfilerView";
 
 interface IProps { sample: GrammarSample, onRun: (input: AntlrInput) => void }
-interface IState { exampleName: string, startRule: string, profile: boolean, response: AntlrResponse, chunks: Chunk[], lastTokenRangeMarker: number, chunk: Chunk, dragOver: boolean }
+interface IState { exampleName: string, startRule: string, showProfiler: boolean, response: AntlrResponse, chunks: Chunk[], lastTokenRangeMarker: number, chunk: Chunk, dragOver: boolean }
 
 // const EXAMPLE_PREFIX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 
@@ -43,7 +44,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     constructor(props: IProps) {
         super(props);
         this.editorRef = createRef();
-        this.state = { exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, profile: false, response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null, dragOver: false };
+        this.state = { exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, showProfiler: false, response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null, dragOver: false };
     }
 
     componentDidMount() {
@@ -220,7 +221,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
                     <FormControl className="start-rule-input" value={this.state.startRule} onChange={e => this.setState({startRule: e.currentTarget.value})} />
                     <button type="button" className="run-button" onClick={()=>this.runAntlr()}>Run</button>
                     <OverlayTrigger overlay={props => this.showHelpProfiler(props)} placement="bottom" >
-                        <FormCheck className="profiler-switch" type="switch" label="Show profiler" onClick={()=>this.setState({profile: !this.state.profile})}/>
+                        <FormCheck className="profiler-switch" type="switch" label="Show profiler" onClick={()=>this.setState({showProfiler: !this.state.showProfiler})}/>
                     </OverlayTrigger>
                 </div>
                 </>;
@@ -312,7 +313,10 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
      }
 
     renderProfileResults() {
-        return <div/>;
+        if(this.state.response && this.state.response.result && this.state.response.result.profile && this.state.showProfiler)
+            return <ProfilerView profilerData={this.state.response.result.profile}/>;
+        else
+            return null;
     }
 
     processResponse(response: AntlrResponse) {

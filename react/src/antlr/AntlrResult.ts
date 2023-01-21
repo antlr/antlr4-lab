@@ -1,17 +1,14 @@
 import {LexerError, ParserError} from "./AntlrError";
 import AntlrToken from "./AntlrToken";
 import AntlrTree from "./AntlrTree";
+import ProfilerData from "./ProfilerData";
 
-interface Profile {
-    colnames: string[];
-    data: string[][];
-}
 
 export default interface AntlrResult {
     input: string;
     lex_errors: LexerError[];
     parse_errors: ParserError[];
-    profile: Profile;
+    profile: ProfilerData;
     rules: string[];
     svgtree: string;
     symbols: string[];

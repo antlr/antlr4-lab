@@ -23,10 +23,9 @@ import {SAMPLE_LEXER, SAMPLE_PARSER} from "../data/Samples";
 import GrammarType from "../antlr/GrammarType";
 import AntlrResponse from "../antlr/AntlrResponse";
 import {clearSessionExtras} from "../ace/AceUtils";
+import {ToolError} from "../antlr/AntlrError";
 
-
-
-interface IProps { samples: GrammarSample[]; sample: GrammarSample; sampleSelected: (sample: GrammarSample) => void }
+interface IProps { samples: GrammarSample[]; sample: GrammarSample; sampleSelected: (sample: GrammarSample) => void, onChange: () => void }
 interface IState { grammarType: GrammarType }
 
 export default class GrammarEditor extends Component<IProps, IState> {
@@ -162,11 +161,22 @@ export default class GrammarEditor extends Component<IProps, IState> {
     renderEditor() {
         const style: CSS.Properties = {position: "relative", width: "100%" };
         return <div className="calc-h-100-32" style={style}>
-            <AceEditor ref={this.editorRef} width="100%" height="100%" mode="text" editorProps={{$blockScrolling: Infinity}} />
+            <AceEditor ref={this.editorRef} width="100%" height="100%" mode="text" editorProps={{$blockScrolling: Infinity}} onChange={()=>this.grammarChanged()}/>
         </div>;
     }
 
-    processResponse(response: AntlrResponse) {
+    grammarChanged() {
+        clearSessionExtras(this.grammarSessions[this.state.grammarType]);
+        this.props.onChange();
+    }
 
+    processResponse(response: AntlrResponse) {
+        this.clearEditorExtras();
+        this.grammarSessions[GrammarType.LEXER].setAnnotations(this.createToolErrorAnnotations(response.lexer_grammar_errors));
+        this.grammarSessions[GrammarType.PARSER].setAnnotations(this.createToolErrorAnnotations(response.parser_grammar_errors));
+    }
+
+    createToolErrorAnnotations(errors: ToolError[]) {
+        return errors.map(error => ({row: error.line - 1, text: error.msg, type: "error"}));
     }
 }

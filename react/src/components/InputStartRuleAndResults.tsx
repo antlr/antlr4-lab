@@ -176,6 +176,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
 
     inputChanged() {
         clearSessionExtras(this.aceEditor.getSession());
+        this.setState({ response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null });
     }
 
     renderStartRule() {
@@ -271,16 +272,21 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     processResponse(response: AntlrResponse) {
+        if(!this.aceEditor) // happens during mount
+            return;
         const session = this.aceEditor.getSession();
         clearSessionExtras(session);
-        let annotations: Ace.Annotation[] = [];
-        if(response.result.lex_errors)
-            annotations = annotations.concat(InputStartRuleAndResults.addLexerMarkersAndAnnotations(session, response.result.lex_errors));
-        if(response.result.lex_errors)
-            annotations = annotations.concat(InputStartRuleAndResults.addParserMarkersAndAnnotations(session, response.result.parse_errors, response.result.tokens));
-        session.setAnnotations(annotations);
-        const chunks = chunkifyInput(session.getValue(), response.result);
-        this.setState({response: response, chunks: chunks});
+        if(response) {
+            let annotations: Ace.Annotation[] = [];
+            if (response.result.lex_errors)
+                annotations = annotations.concat(InputStartRuleAndResults.addLexerMarkersAndAnnotations(session, response.result.lex_errors));
+            if (response.result.lex_errors)
+                annotations = annotations.concat(InputStartRuleAndResults.addParserMarkersAndAnnotations(session, response.result.parse_errors, response.result.tokens));
+            session.setAnnotations(annotations);
+            const chunks = chunkifyInput(session.getValue(), response.result);
+            this.setState({response: response, chunks: chunks, lastTokenRangeMarker: 0, chunk: null});
+        } else
+            this.setState({response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null});
     }
 
     static addLexerMarkersAndAnnotations(session: Ace.EditSession, errors: LexerError[]): Ace.Annotation[] {

@@ -37,7 +37,7 @@ export default class App extends Component<IProps, IState> {
         return <>
                 <div className="h-100 w-100">
                    <div className="h-100" style={leftStyle}>
-                       <GrammarEditor ref={this.grammarEditorRef} samples={this.state.samples} sample={this.state.sample} sampleSelected={sample => this.setState({sample: sample})}/>
+                       <GrammarEditor ref={this.grammarEditorRef} samples={this.state.samples} sample={this.state.sample} sampleSelected={sample => this.setState({sample: sample})} onChange={() => this.grammarChanged()}/>
                    </div>
                    <div className="h-100" style={rightStyle}>
                        { this.renderSplitter() }
@@ -46,6 +46,13 @@ export default class App extends Component<IProps, IState> {
                 </div>
                 { this.renderWelcome() }
             </>;
+    }
+
+    grammarChanged() {
+        const inputEditor: InputStartRuleAndResults = this.inputEditorRef.current;
+        if(!inputEditor) // happens during initial mount
+            return;
+        inputEditor.processResponse(null);
     }
 
     runAntlr(input: AntlrInput) {

@@ -170,7 +170,7 @@ public class ANTLRHttpServer {
 		context.addServlet(new ServletHolder(new ShareServlet()), "/share/*");
 
 		ServletHolder holderHome = new ServletHolder("static-home", DefaultServlet.class);
-		holderHome.setInitParameter("resourceBase", "static");
+		holderHome.setInitParameter("resourceBase", "web");
 		holderHome.setInitParameter("dirAllowed","true");
 		holderHome.setInitParameter("pathInfoOnly","true");
 		context.addServlet(holderHome,"/*");

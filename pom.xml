@@ -111,8 +111,8 @@
 				<directory>resources</directory>
 			</resource>
 			<resource>
-				<directory>static</directory>
-				<targetPath>static</targetPath>
+				<directory>web</directory>
+				<targetPath>web</targetPath>
 			</resource>
 		</resources>
 		<testResources>

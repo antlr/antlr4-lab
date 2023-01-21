@@ -19,7 +19,7 @@ RUN apt install -y openjdk-11-jre
 
 COPY src /app/src
 COPY resources /app/resources
-COPY static /app/static
+COPY web /app/web
 COPY pom.xml /app/pom.xml
 
 # Assumes mvn install was run prior to build Dockerfile

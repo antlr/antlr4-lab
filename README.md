@@ -32,9 +32,30 @@ sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.2-SNAPSHOT/antlr4-la
 
 If you are running the server locally on your box, visit [http://localhost/index.html](http://localhost/index.html) to run the client.
 
+### React
+
+The UI is now build using react/typescript.
+
+To build the UI, you'll need node 16.17+ and yarn 1.22+.
+
+````bash
+cd react
+yarn install # fetches the dependencies
+yarn build  # builds the web app into the parent 'web' folder
+````
+
+To work on the UI, run the backend in Docker, and open your favorite UI dev tool (WebStorm, VSCode...)
+
+````bash
+cd react
+yarn install # fetches the dependencies
+yarn start  # runs the UI on port 3000, redirecting backend calls to 80
+````
+
+
 ### Docker
 
-I created a [Dockerfile](Dockerfile), although I'm not sure how useful it will be to people. This might be useful for deploying in the cloud later.
+I created a [Dockerfile](Dockerfile), which is useful when working on the UI, you can run the backend locally in docker and the UI on port 3000. This might also be useful for deploying in the cloud later.
 
 Here's how to build the docker file:
 

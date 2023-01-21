@@ -71,7 +71,7 @@ export default class GrammarEditor extends Component<IProps, IState> {
     loadEditorWithGrammarSample(sample: GrammarSample) {
         if(!sample)
             return;
-        if(this.props.sample.name === "Sample" )
+        if(sample.name === "Sample" )
             this.loadEditorWithBuiltInGrammarSample();
         else
             this.loadEditorWithRemoteGrammarSample(sample);
@@ -104,7 +104,6 @@ export default class GrammarEditor extends Component<IProps, IState> {
     clearEditorExtras() {
         this.grammarSessions.forEach(session => clearSessionExtras(session), this);
     }
-
 
     render() {
         // @ts-ignore

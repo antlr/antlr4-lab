@@ -30,7 +30,7 @@ import {Ace, Range} from "ace-builds";
 import AntlrToken from "../antlr/AntlrToken";
 
 interface IProps { sample: GrammarSample, onRun: (input: AntlrInput) => void }
-interface IState { exampleName: string, startRule: string, profile: boolean, response: AntlrResponse, chunks: Chunk[] }
+interface IState { exampleName: string, startRule: string, profile: boolean, response: AntlrResponse, chunks: Chunk[], lastTokenRangeMarker: number, chunk: Chunk }
 
 // const EXAMPLE_PREFIX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 
@@ -41,7 +41,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     constructor(props: IProps) {
         super(props);
         this.editorRef = createRef();
-        this.state = { exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, profile: false, response: null, chunks: null };
+        this.state = { exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, profile: false, response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null };
     }
 
     componentDidMount() {
@@ -111,7 +111,16 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
             <OverlayTrigger overlay={props => this.showHelp(props)} placement="bottom" >
                 <Image style={{width: "20px", height: "20px"}} src={help} alt="" />
             </OverlayTrigger>
+            { this.renderChunk() }
         </div>;
+    }
+
+    renderChunk() {
+        if(this.state.chunk) {
+            const style: CSS.Properties = this.state.chunk.tooltip.indexOf("error") >= 0  ? { color: "#9A2E06" } : {};
+            return <FormLabel className="selector-label" style={style}>&nbsp;({this.state.chunk.tooltip})&nbsp;</FormLabel>;
+        } else
+            return null;
     }
 
     inputSelected(example: string) {
@@ -132,17 +141,37 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     renderEditor() {
-        return <div onMouseUp={() => this.aceEditor.resize()} onMouseMove={e => this.showMarker(e)} onMouseLeave={() => this.clearMarker() }>
+        return <div onMouseUp={() => this.aceEditor.resize()} onMouseMove={e => this.showTokenRange(e)} onMouseLeave={() => this.clearTokenRange() }>
                     <AceEditor className="input-editor" ref={this.editorRef} width="calc(100%-10px)" height="300px" mode="text" editorProps={{$blockScrolling: Infinity}} onChange={()=>this.inputChanged()}/>
                 </div>;
     }
 
-    showMarker(event: MouseEvent) {
-
+    showTokenRange(event: MouseEvent) {
+        if(!this.state.chunks)
+            return;
+        // @ts-ignore
+        const pos: Position = this.aceEditor.renderer.screenToTextCoordinates(event.clientX, event.clientY);
+        const session = this.aceEditor.getSession();
+        this.clearTokenRange();
+        let ci = session.doc.positionToIndex(pos);
+        const chunks = this.state.chunks;
+        if(ci >= chunks.length)
+            ci = chunks.length - 1;
+        const chunk = chunks[ci];
+        if(chunk) {
+            const a = session.doc.indexToPosition(chunk.start, 0);
+            const b = session.doc.indexToPosition(chunk.stop, 0);
+            const r = new Range(a.row, a.column, b.row, b.column);
+            const marker = session.addMarker(r, "token_range_class", "text");
+            this.setState({lastTokenRangeMarker: marker, chunk: chunk});
+        } else
+            this.setState({lastTokenRangeMarker: 0, chunk: null});
     }
 
-    clearMarker() {
-
+    clearTokenRange() {
+        if(this.state.lastTokenRangeMarker)
+            this.aceEditor.getSession().removeMarker(this.state.lastTokenRangeMarker);
+        this.setState({lastTokenRangeMarker: 0, chunk: null});
     }
 
     inputChanged() {
@@ -253,25 +282,23 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     static addLexerMarkersAndAnnotations(session: Ace.EditSession, errors: LexerError[]): Ace.Annotation[] {
-        const annotations = errors.map(error => {
+        return errors.map(error => {
             const a = session.doc.indexToPosition(error.startidx, 0);
             const b = session.doc.indexToPosition(error.erridx + 1, 0);
             const r = new Range(a.row, a.column, b.row, b.column);
             session.addMarker(r, "lexical_error_class", "text", false);
             return { row: a.row, text: `${error.line}:${error.pos} ${error.msg}`, type: "error"};
         });
-        return annotations;
     }
 
     static addParserMarkersAndAnnotations(session: Ace.EditSession, errors: ParserError[], tokens: AntlrToken[]): Ace.Annotation[] {
-        const annotations = errors.map(error => {
+        return errors.map(error => {
             const a = session.doc.indexToPosition(tokens[error.startidx].start, 0);
             const b = session.doc.indexToPosition(tokens[error.stopidx].stop + 1, 0);
             const r = new Range(a.row, a.column, b.row, b.column);
             session.addMarker(r, "syntax_error_class", "text", false);
             return { row: a.row, text: `${error.line}:${error.pos} ${error.msg}`, type: "error"};
         });
-        return annotations;
     }
 
 }

@@ -1,15 +1,10 @@
 import {LexerError, ParserError} from "./AntlrError";
 import AntlrToken from "./AntlrToken";
+import AntlrTree from "./AntlrTree";
 
 interface Profile {
     colnames: string[];
     data: string[][];
-}
-
-interface Tree {
-    alt: number;
-    kids: (Tree | number)[];
-    ruleidx: number;
 }
 
 export default interface AntlrResult {
@@ -21,5 +16,5 @@ export default interface AntlrResult {
     svgtree: string;
     symbols: string[];
     tokens: AntlrToken[];
-    tree: Tree;
+    tree: AntlrTree;
 }

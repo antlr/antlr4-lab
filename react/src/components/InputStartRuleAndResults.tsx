@@ -10,7 +10,7 @@ import {
     FormLabel,
     Image,
     OverlayTrigger,
-    Popover
+    Popover, Tab, Tabs
 } from "react-bootstrap";
 import DropdownToggle from "react-bootstrap/DropdownToggle";
 import DropdownMenu from "react-bootstrap/DropdownMenu";
@@ -28,6 +28,8 @@ import {clearSessionExtras} from "../ace/AceUtils";
 import Chunk, {chunkifyInput} from "../ace/Chunk";
 import {Ace, Range} from "ace-builds";
 import AntlrToken from "../antlr/AntlrToken";
+import TreeView from "./TreeView";
+import HierarchyView from "./HierarchyView";
 
 interface IProps { sample: GrammarSample, onRun: (input: AntlrInput) => void }
 interface IState { exampleName: string, startRule: string, profile: boolean, response: AntlrResponse, chunks: Chunk[], lastTokenRangeMarker: number, chunk: Chunk, dragOver: boolean }
@@ -94,6 +96,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
             { this.renderToolConsole() }
             { this.renderParserConsole() }
             { this.renderTree() }
+            { this.renderProfileResults() }
         </div>;
     }
 
@@ -294,6 +297,21 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     renderTree() {
+        if(this.state.response && this.state.response.result) {
+            const input = this.aceEditor.getSession().getValue();
+            return <Tabs defaultActiveKey="tree" className="tree-tabs">
+                <Tab eventKey="tree" title="Tree">
+                    <TreeView result={this.state.response.result}/>
+                </Tab>
+                <Tab eventKey="hierarchy" title="Hierarchy">
+                    <HierarchyView input={input} result={this.state.response.result}/>
+                </Tab>
+            </Tabs>;
+        } else
+            return null;
+     }
+
+    renderProfileResults() {
         return <div/>;
     }
 

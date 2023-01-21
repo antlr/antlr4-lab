@@ -189,7 +189,6 @@ export default class GrammarEditor extends Component<IProps, IState> {
                 });
             }
         }
-
     }
 
     grammarChanged() {

@@ -81,7 +81,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
 
     componentDidUpdate(prevProps: Readonly<IProps>, prevState: Readonly<IState>, snapshot?: any) {
         if(this.props.sample !== prevProps.sample) {
-            this.setState({ exampleName: this.props.sample.examples[0], startRule: this.props.sample.start }, () => this.loadEditorWithInputSample());
+            this.setState({ exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null }, () => this.loadEditorWithInputSample());
         }
     }
 
@@ -105,7 +105,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
                 <Button variant="secondary">{this.state.exampleName}</Button>
                 <DropdownToggle split variant="secondary" />
                 <DropdownMenu align="end">
-                    { this.props.sample.examples.map((example, idx) => <DropdownItem key={idx} eventKey={idx}>{example}</DropdownItem>) }
+                    { this.props.sample.examples.map((example, idx) => <DropdownItem key={"item-" + idx} eventKey={idx}>{example}</DropdownItem>) }
                 </DropdownMenu>
             </Dropdown>
             <OverlayTrigger overlay={props => this.showHelp(props)} placement="bottom" >
@@ -235,10 +235,11 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
                 errors = errors.concat(this.state.response.warnings);
         }
         if(errors.length) {
+            // use a double span to avoid incorrect react warning when using fragment
             return <>
                 <div className="chunk-header">Tool console</div>
                 <div className="console">
-                    { errors.map((error, idx) => <><span key={idx} className="error-message">{error.msg}</span><br/></>) }
+                    { errors.map((error, idx) => <span key={"span-" + idx} ><span className="error-message">{error.msg}</span><br/></span>) }
                 </div>
             </>
         } else
@@ -254,10 +255,11 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
                 errors = errors.concat(this.state.response.result.parse_errors);
         }
         if(errors.length) {
+            // use a double span to avoid incorrect react warning when using fragment
             return <>
                 <div className="chunk-header">Parser console</div>
                 <div className="console">
-                    { errors.map((error,idx) => <><span key={idx} className="error-message">{"" + error.line + ":" + error.pos + " " + error.msg}</span><br/></>) }
+                    { errors.map((error,idx) => <span key={"span-" + idx}><span className="error-message">{"" + error.line + ":" + error.pos + " " + error.msg}</span><br /></span>) }
                 </div>
             </>
         } else

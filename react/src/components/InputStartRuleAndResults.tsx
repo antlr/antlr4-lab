@@ -1,4 +1,4 @@
-import React, {Component, MouseEvent, createRef} from "react";
+import React, {Component, MouseEvent, DragEvent, createRef} from "react";
 import GrammarSample from "../data/GrammarSample";
 import CSS from "csstype";
 import {
@@ -30,7 +30,7 @@ import {Ace, Range} from "ace-builds";
 import AntlrToken from "../antlr/AntlrToken";
 
 interface IProps { sample: GrammarSample, onRun: (input: AntlrInput) => void }
-interface IState { exampleName: string, startRule: string, profile: boolean, response: AntlrResponse, chunks: Chunk[], lastTokenRangeMarker: number, chunk: Chunk }
+interface IState { exampleName: string, startRule: string, profile: boolean, response: AntlrResponse, chunks: Chunk[], lastTokenRangeMarker: number, chunk: Chunk, dragOver: boolean }
 
 // const EXAMPLE_PREFIX = "https://raw.githubusercontent.com/antlr/grammars-v4/master/";
 
@@ -41,7 +41,7 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     constructor(props: IProps) {
         super(props);
         this.editorRef = createRef();
-        this.state = { exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, profile: false, response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null };
+        this.state = { exampleName: this.props.sample.examples[0], startRule: this.props.sample.start, profile: false, response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null, dragOver: false };
     }
 
     componentDidMount() {
@@ -141,9 +141,35 @@ export default class InputStartRuleAndResults extends Component<IProps, IState> 
     }
 
     renderEditor() {
-        return <div onMouseUp={() => this.aceEditor.resize()} onMouseMove={e => this.showTokenRange(e)} onMouseLeave={() => this.clearTokenRange() }>
-                    <AceEditor className="input-editor" ref={this.editorRef} width="calc(100%-10px)" height="300px" mode="text" editorProps={{$blockScrolling: Infinity}} onChange={()=>this.inputChanged()}/>
+        const className = "input-editor" + (this.state.dragOver ? " drag-over" : "");
+        return <div onMouseUp={() => this.aceEditor.resize()} onMouseMove={e => this.showTokenRange(e)} onMouseLeave={() => this.clearTokenRange()}
+                        onDragOver={this.onDragOver.bind(this)} onDragLeave={()=>this.setState({dragOver: false})} onDrop={this.onDrop.bind(this)}>
+                    <AceEditor ref={this.editorRef} className={className} width="calc(100%-10px)" height="300px" mode="text" editorProps={{$blockScrolling: Infinity}} onChange={()=>this.inputChanged()}/>
                 </div>;
+    }
+
+    onDragOver(event: DragEvent) {
+        event.preventDefault(); // otherwise you don't get a drop
+        if(event.dataTransfer.types.indexOf("Files") >= 0) {
+            this.setState({dragOver: true});
+        }
+    }
+
+    onDrop(event: DragEvent) {
+        event.preventDefault();
+        this.setState({dragOver: false});
+        for(let i = 0; i < event.dataTransfer.items.length; i++ ) {
+            const item = event.dataTransfer.items[i];
+            if(item.kind === "file") {
+                const file = item.getAsFile();
+                file.text().then(text => {
+                    const session = this.aceEditor.getSession();
+                    clearSessionExtras(session);
+                    session.setValue(text);
+                    this.setState({ response: null, chunks: null, lastTokenRangeMarker: 0, chunk: null });
+                });
+            }
+        }
     }
 
     showTokenRange(event: MouseEvent) {

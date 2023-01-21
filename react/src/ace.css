@@ -1,3 +1,12 @@
+.ace_editor { /* grammar and input editors */
+    border: solid .5px #7F7F7F;
+    height: 100%;
+    min-width: 300px;
+    min-height:120px;
+    font-family: 'Inconsolata', 'Menlo', monospace;
+    font-size: 12px;
+}
+
 .lexical_error_class {
     position: absolute;
     /*background-color: #D72D26;*/

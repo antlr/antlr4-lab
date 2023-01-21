@@ -86,16 +86,12 @@ export default class App extends Component<IProps, IState> {
                     />;
     }
 
-    static preventDefault(event: Event) {
-        event.preventDefault()
-    }
-
     preventAnimation() {
-        document.addEventListener('dragover', App.preventDefault );
+        document.addEventListener('dragover', event => event.preventDefault() );
     }
 
     unpreventAnimation() {
-        document.removeEventListener('dragover', App.preventDefault );
+        document.removeEventListener('dragover', event => event.preventDefault() );
     }
 
     updateEditorWidth(event: DragEvent<HTMLDivElement>) {

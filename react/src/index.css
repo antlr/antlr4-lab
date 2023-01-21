@@ -177,3 +177,18 @@ code {
 .error-message {
   color: #905857;
 }
+
+.drag-over {
+  border: #94B6EB .5px dashed !important;
+}
+
+.drag-over::after {
+  position: absolute;
+  text-align: center;
+  width: 100%;
+  content: "Drop file here";
+  font-family: 'Arial', sans-serif;
+  font-size: 24pt;
+  color: #94B6EB;
+  font-weight: normal;
+}

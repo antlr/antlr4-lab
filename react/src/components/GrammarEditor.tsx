@@ -1,4 +1,4 @@
-import React, {Component, createRef} from "react";
+import React, {Component, DragEvent, createRef} from "react";
 import AceEditor from "react-ace";
 import CSS from "csstype";
 import {
@@ -26,7 +26,7 @@ import {clearSessionExtras} from "../ace/AceUtils";
 import {ToolError} from "../antlr/AntlrError";
 
 interface IProps { samples: GrammarSample[]; sample: GrammarSample; sampleSelected: (sample: GrammarSample) => void, onChange: () => void }
-interface IState { grammarType: GrammarType }
+interface IState { grammarType: GrammarType, dragOver: boolean }
 
 export default class GrammarEditor extends Component<IProps, IState> {
 
@@ -36,7 +36,7 @@ export default class GrammarEditor extends Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.editorRef = createRef();
-        this.state = { grammarType: GrammarType.PARSER }
+        this.state = { grammarType: GrammarType.PARSER, dragOver: false }
     }
 
    componentDidMount() {
@@ -159,10 +159,37 @@ export default class GrammarEditor extends Component<IProps, IState> {
     }
 
     renderEditor() {
+        const className = "grammar-editor" + (this.state.dragOver ? " drag-over" : "");
         const style: CSS.Properties = {position: "relative", width: "100%" };
-        return <div className="calc-h-100-32" style={style}>
-            <AceEditor ref={this.editorRef} width="100%" height="100%" mode="text" editorProps={{$blockScrolling: Infinity}} onChange={()=>this.grammarChanged()}/>
+        return <div className="calc-h-100-32" style={style}
+                    onDragOver={this.onDragOver.bind(this)} onDragLeave={()=>this.setState({dragOver: false})} onDrop={this.onDrop.bind(this)}>
+            <AceEditor ref={this.editorRef} className={className} width="100%" height="100%" mode="text" editorProps={{$blockScrolling: Infinity}} onChange={()=>this.grammarChanged()}/>
         </div>;
+    }
+
+    onDragOver(event: DragEvent) {
+        event.preventDefault(); // otherwise you don't get a drop
+        if(event.dataTransfer.types.indexOf("Files") >= 0) {
+            this.setState({dragOver: true});
+        }
+    }
+
+    onDrop(event: DragEvent) {
+        event.preventDefault();
+        this.setState({dragOver: false});
+        for(let i = 0; i < event.dataTransfer.items.length; i++ ) {
+            const item = event.dataTransfer.items[i];
+            if(item.kind === "file") {
+                const file = item.getAsFile();
+                file.text().then(text => {
+                    const session = this.grammarSessions[this.state.grammarType];
+                    clearSessionExtras(session);
+                    session.setValue(text);
+                    this.props.onChange();
+                });
+            }
+        }
+
     }
 
     grammarChanged() {

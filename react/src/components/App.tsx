@@ -97,7 +97,7 @@ export default class App extends Component<IProps, IState> {
     updateEditorWidth(event: DragEvent<HTMLDivElement>) {
         const currentWidth = event.currentTarget.offsetLeft;
         const proposedWidth = event.clientX;
-        if(proposedWidth > 0) {
+        if(proposedWidth > 300) {
             const totalWidth = currentWidth * (100 / this.state.editorWidth);
             const editorWidth = proposedWidth / totalWidth;
             this.setState({editorWidth: editorWidth * 100});

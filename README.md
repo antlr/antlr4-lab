@@ -27,6 +27,7 @@ git config --global user.name "Terence Parr"
 Launch!
 
 ```bash
+cd ~/antlr4-lab
 sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.2-SNAPSHOT/antlr4-lab-0.2-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
 ```
 

@@ -1,4 +1,14 @@
 # syntax=docker/dockerfile:1
+FROM --platform=linux/x86_64 maven:3.9.5-eclipse-temurin-11-alpine as builder
+
+WORKDIR /tmp
+
+COPY src /tmp/src
+COPY resources /tmp/resources
+COPY static /tmp/static
+COPY pom.xml /tmp/pom.xml
+
+RUN mvn -B -f /tmp/pom.xml clean package
 
 FROM ubuntu:latest
 
@@ -17,12 +27,10 @@ RUN apt install -y ghostscript pdf2svg texlive-extra-utils
 
 RUN apt install -y openjdk-11-jre
 
-COPY src /app/src
 COPY resources /app/resources
 COPY static /app/static
-COPY pom.xml /app/pom.xml
 
 # Assumes mvn install was run prior to build Dockerfile
-ADD target/antlr4-lab-$LAB_VERSION-complete.jar antlr4-lab-$LAB_VERSION-complete.jar
+COPY --from=builder /tmp/target/antlr4-lab-$LAB_VERSION-complete.jar antlr4-lab-$LAB_VERSION-complete.jar
 ENTRYPOINT java -jar /app/antlr4-lab-$LAB_VERSION-complete.jar
 EXPOSE 80

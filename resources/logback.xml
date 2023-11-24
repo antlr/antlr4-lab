@@ -16,6 +16,7 @@
     </appender>
     <logger name="org.antlr.v4.server.ANTLRHttpServer" level="INFO">
         <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <root level="ERROR">

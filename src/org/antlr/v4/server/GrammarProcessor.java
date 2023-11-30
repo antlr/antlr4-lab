@@ -16,7 +16,7 @@ import org.antlr.v4.tool.*;
 
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
-import static org.antlr.v4.server.ANTLRHttpServer.ParseServlet.LOGGER;
+import static org.antlr.v4.server.ParseServlet.LOGGER;
 import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;

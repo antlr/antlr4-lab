@@ -104,8 +104,9 @@
             <div style="flex-grow: 0">
             <br>
             <span class="chunk-header">Start rule</span>&nbsp;<img title="Enter a rule name here from your grammar to the left where parsing should begin for the input specified above. Hit Run to test." src="images/helpicon.png" width="12" align="bottom"><br>
-            <span class='start-rule' id="start" contenteditable="true" style="min-height: 1em; min-width: 10em; max-width: 20em">program</span>
-            <button type="button" class="run-button" onclick="run_antlr()">Run</button>
+            <span class='start-rule' id="start" contenteditable="true" style="min-height: 1em; min-width: 10em; max-width: 20em"></span>
+                <button type="button" class="run-button" onclick="run_antlr()">Run</button>
+                <button type="button" class="share-button" onclick="share_grammar()">SHARE</button>
             <button id="profile_choice" type="button" class="profile-button" title="Info on the parsing decisions made by the parse for this input. The deeper the lookahead (max k), the more expensive the decision.">Show profiler</button><br>
             </div>
 

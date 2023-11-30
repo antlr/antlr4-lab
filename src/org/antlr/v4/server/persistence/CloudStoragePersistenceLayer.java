@@ -1,11 +1,11 @@
-package org.antlr.v4.server.persistent.cloudstorage;
+package org.antlr.v4.server.persistence;
 
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import org.antlr.v4.server.ANTLRHttpServer;
-import org.antlr.v4.server.persistent.PersistenceLayer;
+import org.antlr.v4.server.persistence.PersistenceLayer;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;

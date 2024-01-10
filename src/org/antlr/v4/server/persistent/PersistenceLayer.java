@@ -12,6 +12,9 @@ public interface PersistenceLayer<K> {
      */
     void persist(byte[] buffer, K identifier) throws IOException;
 
+    /** Return true if the identifier exists in the underlying storage system. */
+    boolean exists(String identifier);
+
     /**
      * Retrieves the content from
      * @param identifier identifier for the persisted content

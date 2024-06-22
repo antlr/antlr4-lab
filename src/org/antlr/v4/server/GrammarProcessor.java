@@ -23,6 +23,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -44,6 +45,7 @@ public class GrammarProcessor {
             long now = System.currentTimeMillis();
             long runTimeMs = now - creationTime;
             if ( runTimeMs > MAX_PARSE_TIME_MS ) {
+                LOGGER.error("Parser timeout ("+MAX_PARSE_TIME_MS+"ms)");
                 throw new ParseCancellationException("Parser timeout ("+MAX_PARSE_TIME_MS+"ms)");
             }
         }
@@ -78,7 +80,7 @@ public class GrammarProcessor {
         }
         catch (RecognitionException re) {
             // shouldn't get here.
-            System.err.println("Can't parse grammar");
+            LOGGER.info("Can't parse grammar");
         }
 
         JsonObject result = new JsonObject();
@@ -86,10 +88,10 @@ public class GrammarProcessor {
         Rule r = g.rules.get(startRule);
         if (r == null) {
             String w = "No such start rule: " + startRule;
+            LOGGER.error(w);
             final JsonObject jsonError = new JsonObject();
             jsonError.addProperty("msg", w);
             warnings.add(jsonError);
-            System.err.println(w);
         }
         else {
             if (lexlistener.errors.size() == 0 && parselistener.errors.size() == 0) {
@@ -134,7 +136,7 @@ public class GrammarProcessor {
         ParseInfo parseInfo = parser.getParseInfo();
 
         long now = System.currentTimeMillis();
-        System.err.println("PARSE TIME: "+(now - parser.creationTime)+"ms");
+        LOGGER.info("PARSE TIME: "+(now - parser.creationTime)+"ms");
 
 //        System.out.println("lex msgs" + lexListener.msgs);
 //        System.out.println("parse msgs" + parseListener.msgs);
@@ -207,7 +209,7 @@ public class GrammarProcessor {
             height = Integer.valueOf(matcher.group(2));
         }
         else {
-            LOGGER.error("Didn't match regex Iin PS: "+regex);
+            LOGGER.error("Didn't match regex in PS: "+regex);
             width = 1000;
             height = 1000;
         }
@@ -219,7 +221,7 @@ public class GrammarProcessor {
                     psFileName, pdfFileName);
 
         if (results[1].length() > 0) {
-            System.err.println("ps2pdf: "+results[1]);
+            LOGGER.info("ps2pdf: "+results[1]);
             String msg = results[1].strip();
             return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
@@ -229,7 +231,7 @@ public class GrammarProcessor {
 
         results = execInDir(IMAGES_DIR, "pdf2svg", pdfFileName, svgFileName);
         if (results[1].length() > 0) {
-            System.err.println("pdf2svg: "+results[1]);
+            LOGGER.info("pdf2svg: "+results[1]);
             String msg = results[1].strip();
             return "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
                     "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; pdf2svg says: "+msg+"</text>\n" +

@@ -182,7 +182,7 @@ function processANTLRResults(response) {
 
     let svgtree = result.svgtree;
     if ( svgtree != null ) {
-        console.log(svgtree);
+        // console.log(svgtree);
         let b64_svgtree = btoa(unescape(encodeURIComponent(svgtree)))
         $("#svgtree").html("<img src='data:image/svg+xml;base64," + b64_svgtree + "'></img>");
     }

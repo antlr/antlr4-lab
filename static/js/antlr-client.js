@@ -89,6 +89,7 @@ function processANTLRResults(response) {
     }
 
     if ( "exception_trace" in response.data ) {
+        console.log("EXCEPTION:"+response.data.exception_trace)
         $("#tool_errors").html(`<span class="error">${response.data.exception_trace}<br></span>`);
         $("#tool_errors").show();
         $("#tool_errors_header").show();

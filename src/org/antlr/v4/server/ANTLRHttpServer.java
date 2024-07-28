@@ -37,7 +37,9 @@ public class ANTLRHttpServer {
 
         @Override
         public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-            logMemoryInfo("BEFORE PARSE");
+            LOGGER.info("INITIATE REQUEST IP: "+request.getRemoteAddr()+
+                    ", Content-Length: "+request.getContentLength());
+            logMemoryInfo("BEFORE PROCESSING FROM IP: "+request.getRemoteAddr());
             JsonObject jsonResponse = new JsonObject();
             try {
                 response.setContentType("text/plain;charset=utf-8");
@@ -56,7 +58,7 @@ public class ANTLRHttpServer {
                 logMsg.append(grammar);
                 logMsg.append("\nLEX GRAMMAR:\n");
                 logMsg.append(lexGrammar);
-                logMsg.append("\nINPUT:\n\"\"\"");
+                logMsg.append("\nINPUT ("+input.length()+" char):\n\"\"\"");
                 logMsg.append(input);
                 logMsg.append("\"\"\"\n");
                 logMsg.append("STARTRULE: ");
@@ -66,35 +68,50 @@ public class ANTLRHttpServer {
 
                 if (grammar.isBlank() && lexGrammar.isBlank()) {
                     jsonResponse.addProperty("arg_error", "missing either combined grammar or lexer and " + "parser both");
-                } else if (grammar.isBlank()) {
+                }
+                else if (grammar.isBlank()) {
                     jsonResponse.addProperty("arg_error", "missing parser grammar");
-                } else if (startRule.isBlank()) {
+                }
+                else if (startRule.isBlank()) {
                     jsonResponse.addProperty("arg_error", "missing start rule");
-                } else if (input.isEmpty()) {
+                }
+                else if (input.isEmpty()) {
                     jsonResponse.addProperty("arg_error", "missing input");
-                } else {
+                }
+                else {
                     try {
                         jsonResponse = interp(grammar, lexGrammar, input, startRule);
-                    } catch (ParseCancellationException pce) {
-                        jsonResponse.addProperty("exception_trace", "parser timeout (" + GrammarProcessor.MAX_PARSE_TIME_MS + "ms)");
-                    } catch (Throwable e) {
-                        e.printStackTrace(System.err);
+                    }
+                    catch (ParseCancellationException pce) {
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        pce.printStackTrace(pw);
+                        jsonResponse.addProperty("exception", pce.getMessage());
+                        jsonResponse.addProperty("exception_trace", sw.toString());
+                        LOGGER.warn(pce.toString());
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
-                jsonResponse.addProperty("exception_trace", sw.toString());
                 jsonResponse.addProperty("exception", e.getMessage());
+                jsonResponse.addProperty("exception_trace", sw.toString());
+                LOGGER.error("PARSER FAILED", e);
             }
+
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter w = response.getWriter();
             w.write(new Gson().toJson(jsonResponse));
             w.flush();
+
+            // Don't save SVG tree in log; usually too big
             JsonElement result = jsonResponse.get("result");
-            ((JsonObject)result).remove("svgtree");  // can be huge
-            logMemoryInfo("AFTER PARSE");
+            if ( result!=null && ((JsonObject) result).has("svgtree") ) {
+                ((JsonObject) result).remove("svgtree");
+            }
+            logMemoryInfo("AFTER PARSE FROM IP: "+request.getRemoteAddr());
             LOGGER.info("RESULT:\n" + jsonResponse);
         }
     }
@@ -104,7 +121,7 @@ public class ANTLRHttpServer {
         var fm = Runtime.getRuntime().freeMemory();
         var tm = Runtime.getRuntime().totalMemory();
         NumberFormat.getInstance().format(fm);
-        ParseServlet.LOGGER.info(prefix+" memory: free=" + NumberFormat.getInstance().format(fm) + " bytes" +
+        ParseServlet.LOGGER.info(prefix + " memory: free=" + NumberFormat.getInstance().format(fm) + " bytes" +
                 ", total=" + NumberFormat.getInstance().format(tm) + " bytes");
     }
 
@@ -126,7 +143,8 @@ public class ANTLRHttpServer {
                 persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8), uniqueKey.orElseThrow());
 
                 jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
@@ -147,7 +165,7 @@ public class ANTLRHttpServer {
 
         Files.createDirectories(Path.of("/var/log/antlrlab"));
         QueuedThreadPool threadPool = new QueuedThreadPool();
-        threadPool.setMaxThreads(3);
+        threadPool.setMaxThreads(5);
         threadPool.setName("server");
 
         Server server = new Server(threadPool);

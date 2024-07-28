@@ -147,7 +147,7 @@ public class ANTLRHttpServer {
 
         Files.createDirectories(Path.of("/var/log/antlrlab"));
         QueuedThreadPool threadPool = new QueuedThreadPool();
-        threadPool.setMaxThreads(10);
+        threadPool.setMaxThreads(3);
         threadPool.setName("server");
 
         Server server = new Server(threadPool);

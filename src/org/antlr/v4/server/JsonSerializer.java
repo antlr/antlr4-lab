@@ -107,8 +107,7 @@ public class JsonSerializer {
             return null;
         }
         TokenStream tokenStream = recog.getInputStream();
-//        CharStream inputStream = tokenStream.getTokenSource().getInputStream();
-        CharStream inputStream = null; // don't send input back to client (they have it and it can be big)
+        CharStream inputStream = tokenStream.getTokenSource().getInputStream();
         return toJSON(t, Arrays.asList(ruleNames), recog.getVocabulary(), tokenStream, inputStream,
                 null, null, null);
     }

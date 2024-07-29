@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=linux/x86_64 maven:3.9.5-eclipse-temurin-11-alpine as builder
+FROM maven:eclipse-temurin AS builder
 
 WORKDIR /tmp
 
@@ -31,6 +31,6 @@ COPY resources /app/resources
 COPY static /app/static
 
 # Assumes mvn install was run prior to build Dockerfile
-COPY --from=builder /tmp/target/antlr4-lab-$LAB_VERSION-complete.jar antlr4-lab-$LAB_VERSION-complete.jar
-ENTRYPOINT java -jar /app/antlr4-lab-$LAB_VERSION-complete.jar
+COPY --from=builder /tmp/target/antlr4-lab-*-complete.jar antlr4-lab-complete.jar
+ENTRYPOINT ["java", "-jar", "/app/antlr4-lab-complete.jar"]
 EXPOSE 80

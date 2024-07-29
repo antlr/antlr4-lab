@@ -13,11 +13,11 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.tool.*;
+import us.parr.lib.ParrtSys;
 
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
 import static org.antlr.v4.server.ANTLRHttpServer.ParseServlet.LOGGER;
-import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -257,6 +257,10 @@ public class GrammarProcessor {
         String svgfilename = Path.of(IMAGES_DIR, svgFileName).toAbsolutePath().toString();
         String svg = new String(Files.readAllBytes(Paths.get(svgfilename)));
         return svg;
+    }
+
+    private static String[] execInDir(String imagesDir, String program, String... args) {
+        return ParrtSys.exec("env --chdir=" + imagesDir + " " + program + " " + String.join(" ", args));
     }
 
     public static final int nodeCount(Tree t) {

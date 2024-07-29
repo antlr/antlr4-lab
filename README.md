@@ -27,7 +27,25 @@ git config --global user.name "Terence Parr"
 Launch!
 
 ```bash
-sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.2-SNAPSHOT/antlr4-lab-0.2-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
+cd ~/antlr4-lab
+sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.4-SNAPSHOT/antlr4-lab-0.4-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
+```
+
+Or to restart if it fails, do:
+
+```bash
+while true
+do
+  sudo java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.4-SNAPSHOT/antlr4-lab-0.4-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
+  sudo cp /var/log/antlrlab/antlrlab.log /var/log/antlrlab/antlrlab-died.log
+  sleep 1
+done
+```
+
+which I've put into `~/antlr4-lab/launch.sh`:
+
+```bash
+nohup launch.sh &
 ```
 
 If you are running the server locally on your box, visit [http://localhost/index.html](http://localhost/index.html) to run the client.

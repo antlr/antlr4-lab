@@ -89,6 +89,7 @@ function processANTLRResults(response) {
     }
 
     if ( "exception_trace" in response.data ) {
+        console.log("EXCEPTION:"+response.data.exception_trace)
         $("#tool_errors").html(`<span class="error">${response.data.exception_trace}<br></span>`);
         $("#tool_errors").show();
         $("#tool_errors_header").show();
@@ -182,7 +183,7 @@ function processANTLRResults(response) {
 
     let svgtree = result.svgtree;
     if ( svgtree != null ) {
-        console.log(svgtree);
+        // console.log(svgtree);
         let b64_svgtree = btoa(unescape(encodeURIComponent(svgtree)))
         $("#svgtree").html("<img src='data:image/svg+xml;base64," + b64_svgtree + "'></img>");
     }

@@ -1,9 +1,9 @@
 package org.antlr.v4.server;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.antlr.v4.server.persistent.PersistenceLayer;
@@ -20,163 +20,174 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
 
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.NumberFormat;
 import java.util.Optional;
 
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
 public class ANTLRHttpServer {
-	public static final String IMAGES_DIR = "/tmp/antlr-images";
+    public static final String IMAGES_DIR = "/tmp/antlr-images";
 
-	public static class ParseServlet extends DefaultServlet {
-		static final ch.qos.logback.classic.Logger LOGGER =
-				(ch.qos.logback.classic.Logger)LoggerFactory.getLogger(ANTLRHttpServer.class);
+    public static class ParseServlet extends DefaultServlet {
+        static final ch.qos.logback.classic.Logger LOGGER = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ANTLRHttpServer.class);
 
-		@Override
-		public void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws IOException
-		{
+        @Override
+        public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            LOGGER.info("INITIATE REQUEST IP: "+request.getRemoteAddr()+
+                    ", Content-Length: "+request.getContentLength());
+            logMemoryInfo("BEFORE PROCESSING FROM IP: "+request.getRemoteAddr());
+            JsonObject jsonResponse = new JsonObject();
+            try {
+                response.setContentType("text/plain;charset=utf-8");
+                response.setContentType("text/html;");
+                response.addHeader("Access-Control-Allow-Origin", "*");
 
-			JsonObject jsonResponse = new JsonObject();
-			try {
-				response.setContentType("text/plain;charset=utf-8");
-				response.setContentType("text/html;");
-				response.addHeader("Access-Control-Allow-Origin", "*");
+                JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
 
-				JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
-//				System.out.println(jsonObj);
+                String grammar = jsonObj.get("grammar").getAsString();
+                String lexGrammar = jsonObj.get("lexgrammar").getAsString(); // can be null
+                String input = jsonObj.get("input").getAsString();
+                String startRule = jsonObj.get("start").getAsString();
 
-				String grammar = jsonObj.get("grammar").getAsString();
-				String lexGrammar = jsonObj.get("lexgrammar").getAsString(); // can be null
-				String input = jsonObj.get("input").getAsString();
-				String startRule = jsonObj.get("start").getAsString();
+                StringBuilder logMsg = new StringBuilder();
+                logMsg.append("GRAMMAR:\n");
+                logMsg.append(grammar);
+                logMsg.append("\nLEX GRAMMAR:\n");
+                logMsg.append(lexGrammar);
+                logMsg.append("\nINPUT ("+input.length()+" char):\n\"\"\"");
+                logMsg.append(input);
+                logMsg.append("\"\"\"\n");
+                logMsg.append("STARTRULE: ");
+                logMsg.append(startRule);
+                logMsg.append('\n');
+                LOGGER.info(logMsg.toString());
 
-				StringBuilder logMsg = new StringBuilder();
-				logMsg.append("GRAMMAR:\n");
-				logMsg.append(grammar);
-				logMsg.append("\nLEX GRAMMAR:\n");
-				logMsg.append(lexGrammar);
-				logMsg.append("\nINPUT:\n\"\"\"");
-				logMsg.append(input);
-				logMsg.append("\"\"\"\n");
-				logMsg.append("STARTRULE: ");
-				logMsg.append(startRule);
-				logMsg.append('\n');
-				LOGGER.info(logMsg.toString());
+                if (grammar.isBlank() && lexGrammar.isBlank()) {
+                    jsonResponse.addProperty("arg_error", "missing either combined grammar or lexer and " + "parser both");
+                }
+                else if (grammar.isBlank()) {
+                    jsonResponse.addProperty("arg_error", "missing parser grammar");
+                }
+                else if (startRule.isBlank()) {
+                    jsonResponse.addProperty("arg_error", "missing start rule");
+                }
+                else if (input.isEmpty()) {
+                    jsonResponse.addProperty("arg_error", "missing input");
+                }
+                else {
+                    try {
+                        jsonResponse = interp(grammar, lexGrammar, input, startRule);
+                    }
+                    catch (ParseCancellationException pce) {
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        pce.printStackTrace(pw);
+                        jsonResponse.addProperty("exception", pce.getMessage());
+                        jsonResponse.addProperty("exception_trace", sw.toString());
+                        LOGGER.warn(pce.toString());
+                    }
+                }
+            }
+            catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                jsonResponse.addProperty("exception", e.getMessage());
+                jsonResponse.addProperty("exception_trace", sw.toString());
+                LOGGER.error("PARSER FAILED", e);
+            }
 
-				if (grammar.strip().length() == 0 && lexGrammar.strip().length() == 0) {
-					jsonResponse.addProperty("arg_error", "missing either combined grammar or lexer and " +
-							"parser both");
-				}
-				else if (grammar.strip().length() == 0 && lexGrammar.strip().length() > 0) {
-					jsonResponse.addProperty("arg_error", "missing parser grammar");
-				}
-				else if (startRule.strip().length() == 0) {
-					jsonResponse.addProperty("arg_error", "missing start rule");
-				}
-				else if (input.length() == 0) {
-					jsonResponse.addProperty("arg_error", "missing input");
-				}
-				else {
-					try {
-						jsonResponse = interp(grammar, lexGrammar, input, startRule);
-					}
-					catch (ParseCancellationException pce) {
-						jsonResponse.addProperty("exception_trace", "parser timeout ("+GrammarProcessor.MAX_PARSE_TIME_MS+"ms)");
-					}
-					catch (Throwable e) {
-						e.printStackTrace(System.err);
-					}
-				}
-			}
-			catch (Exception e) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				jsonResponse.addProperty("exception_trace", sw.toString());
-				jsonResponse.addProperty("exception", e.getMessage());
-			}
-			LOGGER.info("RESULT:\n"+jsonResponse);
-			response.setStatus(HttpServletResponse.SC_OK);
-			PrintWriter w = response.getWriter();
-			w.write(new Gson().toJson(jsonResponse));
-			w.flush();
-		}
-	}
+            response.setStatus(HttpServletResponse.SC_OK);
+            PrintWriter w = response.getWriter();
+            w.write(new Gson().toJson(jsonResponse));
+            w.flush();
 
-	public static class ShareServlet extends DefaultServlet {
-		static final ch.qos.logback.classic.Logger LOGGER =
-				(ch.qos.logback.classic.Logger)LoggerFactory.getLogger(ANTLRHttpServer.class);
+            // Don't save SVG tree in log; usually too big
+            JsonElement result = jsonResponse.get("result");
+            if ( result!=null && ((JsonObject) result).has("svgtree") ) {
+                ((JsonObject) result).remove("svgtree");
+            }
+            logMemoryInfo("AFTER PARSE FROM IP: "+request.getRemoteAddr());
+            LOGGER.info("RESULT:\n" + jsonResponse);
+        }
+    }
 
-		@Override
-		public void doPost(HttpServletRequest request, HttpServletResponse response)
-				throws IOException
-		{
-			final JsonObject jsonResponse = new JsonObject();
-			try {
-				response.setContentType("text/plain;charset=utf-8");
-				response.setContentType("text/html;");
-				response.addHeader("Access-Control-Allow-Origin", "*");
+    private static void logMemoryInfo(String prefix) {
+        Runtime.getRuntime().gc();
+        var fm = Runtime.getRuntime().freeMemory();
+        var tm = Runtime.getRuntime().totalMemory();
+        NumberFormat.getInstance().format(fm);
+        ParseServlet.LOGGER.info(prefix + " memory: free=" + NumberFormat.getInstance().format(fm) + " bytes" +
+                ", total=" + NumberFormat.getInstance().format(tm) + " bytes");
+    }
 
-				JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
-				PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
-				UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
-				Optional<String> uniqueKey = keyGen.generateKey();
-				persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8),
-						uniqueKey.orElseThrow());
+    public static class ShareServlet extends DefaultServlet {
+        static final ch.qos.logback.classic.Logger LOGGER = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ANTLRHttpServer.class);
 
-				jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());
-			}
-			catch (Exception e) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				jsonResponse.addProperty("exception_trace", sw.toString());
-				jsonResponse.addProperty("exception", e.getMessage());
+        @Override
+        public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            final JsonObject jsonResponse = new JsonObject();
+            try {
+                response.setContentType("text/plain;charset=utf-8");
+                response.setContentType("text/html;");
+                response.addHeader("Access-Control-Allow-Origin", "*");
 
-			}
-			LOGGER.info("RESULT:\n"+jsonResponse);
-			response.setStatus(HttpServletResponse.SC_OK);
-			PrintWriter w = response.getWriter();
-			w.write(new Gson().toJson(jsonResponse));
-			w.flush();
-		}
-	}
+                JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
+                PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
+                UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
+                Optional<String> uniqueKey = keyGen.generateKey();
+                persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8), uniqueKey.orElseThrow());
 
-	public static void main(String[] args) throws Exception {
-		new File(IMAGES_DIR).mkdirs();
+                jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());
+            }
+            catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                jsonResponse.addProperty("exception_trace", sw.toString());
+                jsonResponse.addProperty("exception", e.getMessage());
 
-		Files.createDirectories(Path.of("/var/log/antlrlab"));
-		QueuedThreadPool threadPool = new QueuedThreadPool();
-		threadPool.setMaxThreads(10);
-		threadPool.setName("server");
+            }
+            LOGGER.info("RESULT:\n" + jsonResponse);
+            response.setStatus(HttpServletResponse.SC_OK);
+            PrintWriter w = response.getWriter();
+            w.write(new Gson().toJson(jsonResponse));
+            w.flush();
+        }
+    }
 
-		Server server = new Server(threadPool);
+    public static void main(String[] args) throws Exception {
+        new File(IMAGES_DIR).mkdirs();
 
-		ServerConnector http = new ServerConnector(server);
-		http.setPort(80);
+        Files.createDirectories(Path.of("/var/log/antlrlab"));
+        QueuedThreadPool threadPool = new QueuedThreadPool();
+        threadPool.setMaxThreads(5);
+        threadPool.setName("server");
 
-		server.addConnector(http);
+        Server server = new Server(threadPool);
 
-//		Server server = new Server(8080);
+        ServerConnector http = new ServerConnector(server);
+        http.setPort(80);
 
-		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath("/");
-		context.addServlet(new ServletHolder(new ParseServlet()), "/parse/*");
-		context.addServlet(new ServletHolder(new ShareServlet()), "/share/*");
+        server.addConnector(http);
 
-		ServletHolder holderHome = new ServletHolder("static-home", DefaultServlet.class);
-		holderHome.setInitParameter("resourceBase", "static");
-		holderHome.setInitParameter("dirAllowed","true");
-		holderHome.setInitParameter("pathInfoOnly","true");
-		context.addServlet(holderHome,"/*");
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        context.addServlet(new ServletHolder(new ParseServlet()), "/parse/*");
+        context.addServlet(new ServletHolder(new ShareServlet()), "/share/*");
 
-		server.setHandler(context);
+        ServletHolder holderHome = new ServletHolder("static-home", DefaultServlet.class);
+        holderHome.setInitParameter("resourceBase", "static");
+        holderHome.setInitParameter("dirAllowed", "true");
+        holderHome.setInitParameter("pathInfoOnly", "true");
+        context.addServlet(holderHome, "/*");
 
-		server.start();
-	}
+        server.setHandler(context);
+
+        server.start();
+    }
 }

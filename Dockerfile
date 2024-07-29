@@ -12,7 +12,7 @@ RUN mvn -B -f /tmp/pom.xml clean package
 
 FROM ubuntu:latest
 
-ARG LAB_VERSION=0.2-SNAPSHOT
+ARG LAB_VERSION=0.4-SNAPSHOT
 ENV LAB_VERSION=${LAB_VERSION}
 
 USER root:root

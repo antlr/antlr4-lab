@@ -52,23 +52,15 @@ If you are running the server locally on your box, visit [http://localhost/index
 
 ### Docker
 
-I created a [Dockerfile](Dockerfile), although I'm not sure how useful it will be to people. This might be useful for deploying in the cloud later.
-
-Here's how to build the docker file:
-
+Docker builds both jar and the image:
 ```bash
-cd antlr4-lab
-mvn clean package  # has to be built first as docker copies in the jar
-docker build --tag antlr4-lab-docker .
+docker build -t antlr4-lab .
 ```
 
-and here's how to use the docker to launch:
-
+To run docker image:
 ```bash
-docker run -p80:80 --rm antlr4-lab-docker
+docker run -p 8080:80 antlr4-lab
 ```
-
-@kaby76 reports the following: Seems to work fine. But I had to do some things to get it to work on Windows/WSL2.
 
 In Windows: Install Docker Desktop
 

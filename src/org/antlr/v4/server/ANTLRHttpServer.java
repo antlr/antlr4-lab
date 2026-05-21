@@ -1,5 +1,14 @@
 package org.antlr.v4.server;
 
+/*
+ * Local modifications (Michele Fadda, 2026):
+ * - Port changed from 80 to 8080; configurable via -Dantlrlab.port.
+ * - Log directory changed from /var/log/antlrlab to /tmp/antlrlab;
+ *   configurable via -Dantlrlab.log.dir.
+ * - ShareServlet writes to local filesystem (/tmp/antlrlab/share/)
+ *   instead of Google Cloud Storage (no GCP credentials required).
+ */
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -7,7 +16,6 @@ import com.google.gson.JsonParser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.antlr.v4.server.persistent.PersistenceLayer;
-import org.antlr.v4.server.persistent.cloudstorage.CloudStoragePersistenceLayer;
 import org.antlr.v4.server.unique.DummyUniqueKeyGenerator;
 import org.antlr.v4.server.unique.UniqueKeyGenerator;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -26,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.antlr.v4.server.GrammarProcessor.interp;
 
@@ -127,6 +136,7 @@ public class ANTLRHttpServer {
 
     public static class ShareServlet extends DefaultServlet {
         static final ch.qos.logback.classic.Logger LOGGER = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ANTLRHttpServer.class);
+        private static final String SHARE_DIR = System.getProperty("antlrlab.share.dir", "/tmp/antlrlab/share");
 
         @Override
         public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -137,12 +147,12 @@ public class ANTLRHttpServer {
                 response.addHeader("Access-Control-Allow-Origin", "*");
 
                 JsonObject jsonObj = JsonParser.parseReader(request.getReader()).getAsJsonObject();
-                PersistenceLayer<String> persistenceLayer = new CloudStoragePersistenceLayer();
                 UniqueKeyGenerator keyGen = new DummyUniqueKeyGenerator();
                 Optional<String> uniqueKey = keyGen.generateKey();
-                persistenceLayer.persist(new Gson().toJson(jsonResponse).getBytes(StandardCharsets.UTF_8), uniqueKey.orElseThrow());
-
-                jsonResponse.addProperty("resource_id", uniqueKey.orElseThrow());
+                String id = uniqueKey.orElseThrow();
+                new File(SHARE_DIR).mkdirs();
+                Files.writeString(Path.of(SHARE_DIR, id + ".json"), new Gson().toJson(jsonObj), StandardCharsets.UTF_8);
+                jsonResponse.addProperty("resource_id", id);
             }
             catch (Exception e) {
                 StringWriter sw = new StringWriter();
@@ -163,7 +173,11 @@ public class ANTLRHttpServer {
     public static void main(String[] args) throws Exception {
         new File(IMAGES_DIR).mkdirs();
 
-        Files.createDirectories(Path.of("/var/log/antlrlab"));
+        String logDir = System.getProperty("antlrlab.log.dir", "/tmp/antlrlab");
+        Files.createDirectories(Path.of(logDir));
+        System.setProperty("antlrlab.log.dir", logDir);
+
+        int port = Integer.parseInt(System.getProperty("antlrlab.port", "8080"));
         QueuedThreadPool threadPool = new QueuedThreadPool();
         threadPool.setMaxThreads(5);
         threadPool.setName("server");
@@ -171,7 +185,7 @@ public class ANTLRHttpServer {
         Server server = new Server(threadPool);
 
         ServerConnector http = new ServerConnector(server);
-        http.setPort(80);
+        http.setPort(port);
 
         server.addConnector(http);
 

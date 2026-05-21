@@ -24,5 +24,5 @@ COPY pom.xml /app/pom.xml
 
 # Assumes mvn install was run prior to build Dockerfile
 ADD target/antlr4-lab-$LAB_VERSION-complete.jar antlr4-lab-$LAB_VERSION-complete.jar
-ENTRYPOINT java -jar /app/antlr4-lab-$LAB_VERSION-complete.jar
+ENTRYPOINT java -Dantlrlab.port=80 -jar /app/antlr4-lab-$LAB_VERSION-complete.jar
 EXPOSE 80

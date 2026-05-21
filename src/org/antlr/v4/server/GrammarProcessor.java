@@ -1,5 +1,20 @@
 package org.antlr.v4.server;
 
+/*
+ * Local modifications (Michele Fadda, 2026):
+ * - Inlined execInDir() and StreamVacuum from the removed parrtlib dependency.
+ * - execInDir uses ProcessBuilder instead of Runtime.exec for better
+ *   PATH/environment control (adds /opt/homebrew/bin for Apple Silicon).
+ * - Added ensureSVGDeps() that auto-installs ps2pdf/pdf2svg via brew (macOS)
+ *   or apt-get (Linux) if missing, or returns a helpful SVG error with
+ *   installation instructions (Windows/unsupported OS).
+ * - toSVG() returns an error SVG with guidance instead of crashing on failure.
+ * - commandExists() helper checks system PATH via `which`.
+ * - Replaced deprecated StringBufferInputStream with CharStreams.fromString().
+ * - Added escXml() and makeErrorSVG() helpers for safe SVG error rendering.
+ * - Several private methods changed to package-private for testability.
+ */
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.antlr.runtime.RecognitionException;
@@ -17,12 +32,13 @@ import org.antlr.v4.tool.*;
 import static org.antlr.v4.gui.Interpreter.profilerColumnNames;
 import static org.antlr.v4.server.ANTLRHttpServer.IMAGES_DIR;
 import static org.antlr.v4.server.ANTLRHttpServer.ParseServlet.LOGGER;
-import static us.parr.lib.ParrtSys.execInDir;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -115,7 +131,7 @@ public class GrammarProcessor {
     private static JsonObject parseAndGetJSON(Grammar g, LexerGrammar lg, String startRule, String input)
             throws IOException
     {
-        CharStream charStream = CharStreams.fromStream(new StringBufferInputStream(input));
+        CharStream charStream = CharStreams.fromString(input);
 
         LexerInterpreter lexEngine = (lg != null) ?
                 lg.createLexerInterpreter(charStream) :
@@ -206,6 +222,11 @@ public class GrammarProcessor {
     }
 
     public static String toSVG(Tree t, List<String> ruleNames) throws IOException {
+        String depError = ensureSVGDeps();
+        if (depError != null) {
+            return depError;
+        }
+
         long id = Thread.currentThread().getId();
         String psFileName = "temp-" + id + ".ps";
         String pdfFileName = "temp-" + id + ".pdf";
@@ -238,25 +259,112 @@ public class GrammarProcessor {
 
         if (results[1].length() > 0) {
             LOGGER.info("ps2pdf: " + results[1]);
-            String msg = results[1].strip();
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
-                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; ps2pdf says: " + msg + "</text>\n" +
-                    "</svg>";
+            return makeErrorSVG("ps2pdf failed: " + escXml(results[1].strip()));
         }
 
         results = execInDir(IMAGES_DIR, "pdf2svg", pdfFileName, svgFileName);
         if (results[1].length() > 0) {
             LOGGER.info("pdf2svg: " + results[1]);
-            String msg = results[1].strip();
-            return "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\"30\" width=\"800\">\n" +
-                    "  <text x=\"0\" y=\"15\" fill=\"red\">Can't create SVG tree; pdf2svg says: " + msg + "</text>\n" +
-                    "</svg>";
+            return makeErrorSVG("pdf2svg failed: " + escXml(results[1].strip()));
         }
 
         String svgfilename = Path.of(IMAGES_DIR, svgFileName).toAbsolutePath().toString();
         String svg = new String(Files.readAllBytes(Paths.get(svgfilename)));
         return svg;
+    }
+
+    static String escXml(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    static String makeErrorSVG(String msg) {
+        String[] lines = msg.split("\n");
+        int lineH = 18;
+        int h = Math.max(30, (lines.length + 1) * lineH);
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"").append(h).append("\" width=\"800\">\n");
+        for (int i = 0; i < lines.length; i++) {
+            sb.append("  <text x=\"5\" y=\"").append((i + 1) * lineH).append("\" fill=\"red\" font-size=\"12\">")
+              .append(lines[i]).append("</text>\n");
+        }
+        sb.append("</svg>\n");
+        return sb.toString();
+    }
+
+    static String ensureSVGDeps() {
+        boolean ps2pdfOk = commandExists("ps2pdf");
+        boolean pdf2svgOk = commandExists("pdf2svg");
+        if (ps2pdfOk && pdf2svgOk) return null;
+
+        String os = System.getProperty("os.name").toLowerCase();
+        LOGGER.info("Ensuring SVG deps (ps2pdf={}, pdf2svg={}) on {}", ps2pdfOk, pdf2svgOk, os);
+
+        List<String> missing = new ArrayList<>();
+        if (!ps2pdfOk) missing.add("ghostscript");
+        if (!pdf2svgOk) missing.add("pdf2svg");
+
+        if (os.contains("mac")) {
+            if (commandExists("brew")) {
+                List<String> cmd = new ArrayList<>(Arrays.asList("brew", "install"));
+                cmd.addAll(missing);
+                try {
+                    execInDir(null, cmd.toArray(new String[0]));
+                    return null;
+                }
+                catch (RuntimeException e) {
+                    LOGGER.warn("brew install failed: " + e.getMessage());
+                }
+            }
+            return makeErrorSVG(
+                "To view parse trees, install these missing tools:\n" +
+                "  brew install " + String.join(" ", missing) + "\n\n" +
+                "If Homebrew is not installed, get it from: https://brew.sh");
+        }
+        else if (os.contains("linux")) {
+            if (commandExists("apt-get")) {
+                List<String> cmd = new ArrayList<>(Arrays.asList("sudo", "apt-get", "install", "-y"));
+                cmd.addAll(missing);
+                try {
+                    execInDir(null, cmd.toArray(new String[0]));
+                    return null;
+                }
+                catch (RuntimeException e) {
+                    LOGGER.warn("apt-get install failed: " + e.getMessage());
+                }
+            }
+            return makeErrorSVG(
+                "To view parse trees, install these missing tools:\n" +
+                "  sudo apt-get install -y " + String.join(" ", missing) + "\n\n" +
+                "Or use your distro's package manager (yum, dnf, pacman, etc.)");
+        }
+        else if (os.contains("win")) {
+            return makeErrorSVG(
+                "To view parse trees on Windows, install:\n" +
+                "  1. Ghostscript (ps2pdf): https://www.ghostscript.com/releases/gsdnld.html\n" +
+                "  2. pdf2svg: https://github.com/dawbarton/pdf2svg\n" +
+                "     or via MSYS2:  pacman -S mingw-w64-x86_64-pdf2svg\n" +
+                "     or via Cygwin: apt-cyg install pdf2svg\n\n" +
+                "After installing, ensure both are on your system PATH.");
+        }
+        else {
+            return makeErrorSVG(
+                "Unrecognized OS: " + os + "\n" +
+                "To view parse trees, install these tools manually:\n" +
+                "  - Ghostscript (ps2pdf): https://www.ghostscript.com/\n" +
+                "  - pdf2svg: https://github.com/dawbarton/pdf2svg\n" +
+                "  Then ensure they are on your PATH.");
+        }
+    }
+
+    static boolean commandExists(String cmd) {
+        try {
+            String[] result = execInDir(null, "which", cmd);
+            return result[0] != null && result[0].strip().length() > 0;
+        }
+        catch (RuntimeException e) {
+            return false;
+        }
     }
 
     public static final int nodeCount(Tree t) {
@@ -268,6 +376,68 @@ public class GrammarProcessor {
             n += nodeCount(t.getChild(i));
         }
         return n;
+    }
+
+    // Replaces us.parr.lib.ParrtSys.execInDir
+    public static String[] execInDir(String execPath, String... args) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(args);
+            if (execPath != null) {
+                pb.directory(new File(execPath));
+            }
+            // Inherit PATH from the system environment (brew paths, etc.)
+            String pathEnv = System.getenv("PATH");
+            if (pathEnv != null && !pathEnv.contains("/opt/homebrew/bin")) {
+                pb.environment().put("PATH", pathEnv + ":/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin");
+            }
+            pb.redirectErrorStream(false);
+            Process process = pb.start();
+            StreamVacuum stdoutVacuum = new StreamVacuum(process.getInputStream());
+            StreamVacuum stderrVacuum = new StreamVacuum(process.getErrorStream());
+            stdoutVacuum.start();
+            stderrVacuum.start();
+            process.waitFor();
+            stdoutVacuum.join();
+            stderrVacuum.join();
+            return new String[]{stdoutVacuum.toString(), stderrVacuum.toString()};
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static class StreamVacuum implements Runnable {
+        private StringBuilder buf = new StringBuilder();
+        private BufferedReader in;
+        private Thread sucker;
+        public StreamVacuum(InputStream in) {
+            this.in = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+        }
+        public void start() {
+            sucker = new Thread(this);
+            sucker.start();
+        }
+        @Override
+        public void run() {
+            try {
+                String line = in.readLine();
+                while (line!=null) {
+                    buf.append(line);
+                    buf.append('\n');
+                    line = in.readLine();
+                }
+            }
+            catch (IOException ioe) {
+                System.err.println("can't read output from process");
+            }
+        }
+        public void join() throws InterruptedException {
+            sucker.join();
+        }
+        @Override
+        public String toString() {
+            return buf.toString();
+        }
     }
 
     /** A test main program for the "big" dir grammar */

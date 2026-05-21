@@ -1,5 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<!--
+	  Local modifications (Michele Fadda, 2026):
+	  - Removed us.parr:parrtlib:0.5-SNAPSHOT dependency (not in Maven Central);
+	    execInDir() and StreamVacuum inlined into GrammarProcessor.java.
+	  - Added maven.compiler.release property.
+	  - Added JUnit 5 (junit-jupiter-api, junit-jupiter-engine) test dependencies.
+	  - Added testSourceDirectory element pointing to test/java.
+	-->
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
@@ -29,6 +37,7 @@
 	<properties>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.release>11</maven.compiler.release>
 	</properties>
 
 	<dependencies>
@@ -87,19 +96,28 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.6</version>
 		</dependency>
-		<dependency>
-			<groupId>us.parr</groupId>
-			<artifactId>parrtlib</artifactId>
-			<version>0.5-SNAPSHOT</version>
-		</dependency>
+		<!-- parrtlib removed; execInDir inlined into GrammarProcessor -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.10</version>
 		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.9.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.9.3</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
+		<testSourceDirectory>test/java</testSourceDirectory>
 		<resources>
 			<resource>
 				<directory>resources</directory>

@@ -1,9 +1,45 @@
 # antlr4-lab
 A client/server for trying out and learning about ANTLR
 
-## Building and launching server
+## Building and launching server locally
 
-Ubuntu with lab.antlr.org static IP
+### Prerequisites
+- Java 11+ (tested with Java 21)
+- Maven 3.8+
+- [Optional] Ghostscript (ps2pdf) and pdf2svg — for parse tree SVG rendering.
+  If missing, the server auto-installs them via Homebrew (macOS) or apt-get
+  (Linux) on first use, or shows installation instructions.
+
+```bash
+git clone https://github.com/antlr/antlr4-lab.git
+cd antlr4-lab
+mvn install
+java -jar target/antlr4-lab-0.4-SNAPSHOT-complete.jar
+```
+
+Then visit [http://localhost:8080/index.html](http://localhost:8080/index.html).
+
+### Configuration
+The server can be configured with system properties:
+
+| Property | Default | Description |
+|---|---|---|
+| `antlrlab.port` | `8080` | HTTP port |
+| `antlrlab.log.dir` | `/tmp/antlrlab` | Log directory |
+| `antlrlab.share.dir` | `/tmp/antlrlab/share` | Share storage directory |
+
+Example:
+```bash
+java -Dantlrlab.port=9090 -Dantlrlab.log.dir=/var/log/antlrlab \
+  -jar target/antlr4-lab-0.4-SNAPSHOT-complete.jar
+```
+
+### Running tests
+```bash
+mvn test
+```
+
+### Ubuntu / production server
 
 ```bash
 cd ~
@@ -19,72 +55,33 @@ mvn install
 
 sudo mkdir /var/log/antlrlab
 sudo chmod 777 /var/log/antlrlab
-ssh-keygen -t ed25519 -C 'parrt@...'  # add key to github
-git config --global user.email "parrt@..."
-git config --global user.name "Terence Parr"
+sudo java -Dantlrlab.port=80 -Dantlrlab.log.dir=/var/log/antlrlab \
+  -jar target/antlr4-lab-0.4-SNAPSHOT-complete.jar
 ```
 
-Launch!
-
-```bash
-cd ~/antlr4-lab
-sudo nohup java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.4-SNAPSHOT/antlr4-lab-0.4-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
-```
-
-Or to restart if it fails, do:
-
-```bash
-while true
-do
-  sudo java -cp ~/.m2/repository/org/antlr/antlr4-lab/0.4-SNAPSHOT/antlr4-lab-0.4-SNAPSHOT-complete.jar org.antlr.v4.server.ANTLRHttpServer
-  sudo cp /var/log/antlrlab/antlrlab.log /var/log/antlrlab/antlrlab-died.log
-  sleep 1
-done
-```
-
-which I've put into `~/antlr4-lab/launch.sh`:
-
-```bash
-nohup launch.sh &
-```
-
-If you are running the server locally on your box, visit [http://localhost/index.html](http://localhost/index.html) to run the client.
+Visit [http://localhost/index.html](http://localhost/index.html) to run the client.
 
 ### Docker
 
-I created a [Dockerfile](Dockerfile), although I'm not sure how useful it will be to people. This might be useful for deploying in the cloud later.
-
-Here's how to build the docker file:
-
 ```bash
 cd antlr4-lab
-mvn clean package  # has to be built first as docker copies in the jar
+mvn clean package
 docker build --tag antlr4-lab-docker .
-```
-
-and here's how to use the docker to launch:
-
-```bash
 docker run -p80:80 --rm antlr4-lab-docker
 ```
 
-@kaby76 reports the following: Seems to work fine. But I had to do some things to get it to work on Windows/WSL2.
+## Local modifications (Michele Fadda, 2026)
 
-In Windows: Install Docker Desktop
+This fork includes the following changes to make the project run locally
+without external cloud services or root privileges:
 
-In WSL2/Ubuntu:
-
-```bash
-sudo apt install docker.io
-git clone https://github.com/antlr/antlr4-lab.git
-cd antlr4-lab
-git checkout docker
-mvn clean; mvn install
-docker build .
-docker image ls # get image name.
-docker run -d -p 127.0.0.1:80:80 -e BIND_ADDR=0.0.0.0:80 image-name-from-above
-```
-
-In Windows again, run Firefox and connect to 127.0.0.1.
-
-It looks like docker binds port 80 to 0.0.0.0 by default (after installing `net-tools`, and doing `netstat -a`).
+| Issue | Fix |
+|---|---|
+| Port 80 (requires root) | Changed to 8080, configurable via `-Dantlrlab.port` |
+| `/var/log/antlrlab` (requires root) | Changed to `/tmp/antlrlab`, configurable via `-Dantlrlab.log.dir` |
+| `us.parr:parrtlib` SNAPSHOT not in Maven Central | `execInDir()` and `StreamVacuum` inlined into `GrammarProcessor.java` |
+| Google Cloud Storage dependency in ShareServlet | Replaced with local filesystem storage in `/tmp/antlrlab/share/` |
+| `pdf2svg`/`ps2pdf` missing → exception | Auto-installs via Homebrew (macOS) or apt-get (Linux); shows guidance on Windows |
+| `execInDir` couldn't find brew-installed binaries | `ProcessBuilder` now appends `/opt/homebrew/bin` to PATH |
+| Deprecated `StringBufferInputStream` | Replaced with `CharStreams.fromString()` |
+| JUnit 5 tests | Added 14 unit tests covering `interp`, `execInDir`, `commandExists`, `escXml`, `makeErrorSVG`, and `ensureSVGDeps` |

@@ -24,6 +24,7 @@ let SAMPLE_PARSER =
     "    | 'not' expr\n" +
     "    | expr 'and' expr\n" +
     "    | expr 'or' expr\n" +
+	"    | INT '+' ID\n"  +
     "    ;\n" +
     "\n" +
     "func : ID '(' expr (',' expr)* ')' ;"
@@ -42,6 +43,7 @@ let SAMPLE_LEXER =
     "RPAREN : ')' ;\n" +
     "LCURLY : '{' ;\n" +
     "RCURLY : '}' ;\n" +
+	"Plus : '+' ;\n" +
     "\n" +
     "INT : [0-9]+ ;\n" +
     "ID: [a-zA-Z_][a-zA-Z_0-9]* ;\n" +
